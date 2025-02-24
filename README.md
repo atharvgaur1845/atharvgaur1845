@@ -1,7 +1,7 @@
 ## 👋 Hey there, I'm Atharv!  
 
 🚀 Passionate about AI, robotics, and building cool projects.  
-🎯 Currently working on a **Micromouse** and an **AI-based solar rooftop analyzer**.  
+🎯 Currently working on a **Micromouse** 
 💡 Always curious about **machine learning, embedded systems, and algorithms**.  
 
 ---
