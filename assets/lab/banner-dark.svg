@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 260" width="1200" height="260" role="img" aria-label="Atharv — research laboratory. Figure zero: observed versus predicted latent trajectory.">
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+
+    <!-- identity block -->
+    <text x="26" y="86" font-size="30" font-weight="600" letter-spacing="12" fill="#E6EDF3">ATHARV</text>
+    <text x="28" y="114" font-size="11.5" letter-spacing="5" fill="#E2794F">RESEARCH LABORATORY</text>
+    <text x="28" y="152" font-size="12.5" fill="#9198A1">representation learning · self-supervision</text>
+    <text x="28" y="172" font-size="12.5" fill="#9198A1">world models · long-horizon prediction</text>
+    <text x="28" y="192" font-size="12.5" fill="#9198A1">cs undergraduate · bits pilani</text>
+
+    <!-- plot frame: corner registration ticks -->
+    <g stroke="#30363D" stroke-width="1" fill="none">
+      <path d="M620,56 V44 H632"/>
+      <path d="M1138,44 H1150 V56"/>
+      <path d="M620,184 V196 H632"/>
+      <path d="M1138,196 H1150 V184"/>
+    </g>
+
+    <text x="620" y="36" font-size="10" letter-spacing="2" fill="#9198A1">LATENT TRAJECTORY</text>
+
+    <!-- axis -->
+    <line x1="620" y1="196" x2="1150" y2="196" stroke="#30363D" stroke-width="1"/>
+    <g stroke="#30363D" stroke-width="1">
+      <line x1="620" y1="196" x2="620" y2="201"/>
+      <line x1="695" y1="196" x2="695" y2="201"/>
+      <line x1="770" y1="196" x2="770" y2="201"/>
+      <line x1="845" y1="196" x2="845" y2="201"/>
+      <line x1="920" y1="196" x2="920" y2="201"/>
+      <line x1="995" y1="196" x2="995" y2="201"/>
+      <line x1="1070" y1="196" x2="1070" y2="201"/>
+      <line x1="1145" y1="196" x2="1145" y2="201"/>
+    </g>
+    <text x="620" y="214" font-size="10" fill="#9198A1" text-anchor="middle">t0</text>
+    <text x="1145" y="214" font-size="10" fill="#9198A1" text-anchor="middle">t+H</text>
+
+    <!-- context / rollout divider -->
+    <line x1="845" y1="48" x2="845" y2="196" stroke="#30363D" stroke-width="1" stroke-dasharray="3 4"/>
+    <text x="845" y="40" font-size="10" fill="#9198A1" text-anchor="middle">context → rollout</text>
+
+    <!-- divergence region -->
+    <path d="M845,114 C870,112 895,105 920,104 C945,103 970,110 995,112 C1020,114 1045,105 1070,102 C1097,99 1125,104 1150,106 L1150,175 C1135,174 1110,172 1090,170 C1040,164 990,156 950,142 C915,130 880,118 845,114 Z"
+          fill="#E2794F" fill-opacity="0.07" stroke="none"/>
+
+    <!-- observed trajectory -->
+    <path d="M620,148 C645,118 670,102 695,102 C720,102 745,114 770,116 C795,118 820,116 845,114 C870,112 895,105 920,104 C945,103 970,110 995,112 C1020,114 1045,105 1070,102 C1097,99 1125,104 1150,106"
+          fill="none" stroke="#E6EDF3" stroke-width="1.6"/>
+    <g fill="#E6EDF3">
+      <circle cx="620" cy="148" r="2.6"/>
+      <circle cx="695" cy="102" r="2.6"/>
+      <circle cx="770" cy="116" r="2.6"/>
+      <circle cx="845" cy="114" r="2.6"/>
+      <circle cx="920" cy="104" r="2.6"/>
+      <circle cx="995" cy="112" r="2.6"/>
+      <circle cx="1070" cy="102" r="2.6"/>
+    </g>
+
+    <!-- predicted rollout -->
+    <path d="M845,114 C880,118 915,130 950,142 C990,156 1040,164 1090,170 C1110,172 1135,174 1150,175"
+          fill="none" stroke="#E2794F" stroke-width="1.6" stroke-dasharray="5 4"/>
+
+    <text x="1148" y="92" font-size="10.5" fill="#E6EDF3" text-anchor="end">z (observed)</text>
+    <text x="1148" y="190" font-size="10.5" fill="#E2794F" text-anchor="end">ẑ (rollout)</text>
+
+    <!-- caption -->
+    <text x="600" y="244" font-size="11.5" font-style="italic" fill="#9198A1" text-anchor="middle">fig. 0 — observed vs. predicted latent trajectory. divergence grows with horizon; the interesting part is why.</text>
+  </g>
+</svg>

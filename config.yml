@@ -1,0 +1,12 @@
+# Which concept renders to README.md: lab | dashboard | atlas
+concept: lab
+
+github_user: atharvgaur1845
+
+# section limits
+notebook_entries: 3
+failure_entries: 3
+reading_rows: 6
+ideas_rows: 6
+activity_repos: 5
+activity_days: 84

@@ -1,0 +1,65 @@
+# Rebuilds README.md whenever the data layer changes, plus once a day so
+# API-sourced sections (activity, trace) never go stale.
+#
+# The `paths` filter deliberately excludes README.md and assets/generated/ —
+# the build commit touches only those, so it can never retrigger itself.
+
+name: build readme
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "research/**"
+      - "papers/**"
+      - "projects.yml"
+      - "config.yml"
+      - "templates/**"
+      - "scripts/**"
+      - "assets/lab/**"
+      - "assets/dashboard/**"
+      - "assets/atlas/**"
+      - ".github/workflows/build.yml"
+  schedule:
+    - cron: "17 5 * * *"   # 05:17 UTC daily — odd minute avoids the on-the-hour rush
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-readme
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install deps
+        run: pip install --quiet pyyaml
+
+      - name: derive dark-mode assets
+        run: python scripts/make_dark.py
+
+      - name: build readme
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/build_readme.py
+
+      - name: commit if changed
+        run: |
+          git config user.name "readme-builder"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md assets/generated ':(glob)assets/**/*-dark.svg'
+          if git diff --cached --quiet; then
+            echo "no changes — nothing to commit"
+          else
+            git commit -m "build: regenerate readme $(date -u +'%Y-%m-%d %H:%M')"
+            git push
+          fi

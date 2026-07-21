@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 210" width="1200" height="210" role="img" aria-label="Figure two: temporal JEPA architecture. Frames pass through an encoder into latent space; a predictor rolls forward; loss is computed against a frozen target encoder. No pixel reconstruction.">
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+    <text x="24" y="30" font-size="10.5" letter-spacing="3" fill="#9198A1">TEMPORAL JEPA — ARCHITECTURE</text>
+
+    <!-- input frame stack -->
+    <rect x="56" y="70" width="64" height="48" rx="2" fill="#161B22" stroke="#30363D"/>
+    <rect x="48" y="78" width="64" height="48" rx="2" fill="#161B22" stroke="#30363D"/>
+    <rect x="40" y="86" width="64" height="48" rx="2" fill="#161B22" stroke="#E6EDF3"/>
+    <text x="76" y="156" font-size="11.5" fill="#E6EDF3" text-anchor="middle">x[t..t+k]</text>
+    <text x="76" y="172" font-size="10" fill="#9198A1" text-anchor="middle">satellite frames</text>
+
+    <!-- top branch: future frame into target encoder -->
+    <path d="M88,70 V37 H512" fill="none" stroke="#30363D" stroke-width="1"/>
+    <polygon points="512,33 520,37 512,41" fill="#9198A1"/>
+    <text x="380" y="30" font-size="10.5" fill="#9198A1" text-anchor="middle">x[t+k]</text>
+
+    <!-- encoder -->
+    <line x1="140" y1="110" x2="182" y2="110" stroke="#9198A1" stroke-width="1.2"/>
+    <polygon points="182,106 190,110 182,114" fill="#9198A1"/>
+    <rect x="190" y="86" width="120" height="48" rx="3" fill="#161B22" stroke="#E6EDF3"/>
+    <text x="250" y="106" font-size="12.5" fill="#E6EDF3" text-anchor="middle">encoder</text>
+    <text x="250" y="122" font-size="10.5" fill="#9198A1" text-anchor="middle">f0(x)</text>
+
+    <!-- ema link to target encoder -->
+    <line x1="312" y1="88" x2="516" y2="58" stroke="#9198A1" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="404" y="64" font-size="10" fill="#9198A1">ema →</text>
+
+    <!-- target encoder -->
+    <rect x="520" y="12" width="150" height="48" rx="3" fill="#161B22" stroke="#30363D"/>
+    <text x="595" y="32" font-size="12.5" fill="#E6EDF3" text-anchor="middle">target encoder</text>
+    <text x="595" y="48" font-size="10.5" fill="#9198A1" text-anchor="middle">ema of f0 · frozen</text>
+    <path d="M670,37 H805 V78" fill="none" stroke="#30363D" stroke-width="1"/>
+    <polygon points="801,78 805,86 809,78" fill="#9198A1"/>
+    <text x="740" y="30" font-size="10.5" fill="#9198A1">z*[t+k]</text>
+
+    <!-- latent chip -->
+    <line x1="310" y1="110" x2="342" y2="110" stroke="#9198A1" stroke-width="1.2"/>
+    <polygon points="342,106 350,110 342,114" fill="#9198A1"/>
+    <rect x="350" y="98" width="52" height="24" rx="3" fill="none" stroke="#E6EDF3"/>
+    <text x="376" y="114" font-size="11.5" fill="#E6EDF3" text-anchor="middle">z[t]</text>
+
+    <!-- predictor -->
+    <line x1="402" y1="110" x2="432" y2="110" stroke="#9198A1" stroke-width="1.2"/>
+    <polygon points="432,106 440,110 432,114" fill="#9198A1"/>
+    <rect x="440" y="86" width="150" height="48" rx="3" fill="#161B22" stroke="#E6EDF3"/>
+    <text x="515" y="106" font-size="12.5" fill="#E6EDF3" text-anchor="middle">predictor</text>
+    <text x="515" y="122" font-size="10.5" fill="#9198A1" text-anchor="middle">g(z, Δt)</text>
+
+    <!-- predicted latent -->
+    <line x1="590" y1="110" x2="622" y2="110" stroke="#9198A1" stroke-width="1.2"/>
+    <polygon points="622,106 630,110 622,114" fill="#9198A1"/>
+    <rect x="630" y="98" width="64" height="24" rx="3" fill="none" stroke="#E2794F" stroke-width="1.3"/>
+    <text x="662" y="114" font-size="11.5" fill="#E2794F" text-anchor="middle">ẑ[t+k]</text>
+
+    <!-- loss -->
+    <line x1="694" y1="110" x2="727" y2="110" stroke="#9198A1" stroke-width="1.2"/>
+    <polygon points="727,106 735,110 727,114" fill="#9198A1"/>
+    <rect x="735" y="86" width="180" height="48" rx="3" fill="none" stroke="#E6EDF3" stroke-dasharray="5 4"/>
+    <text x="825" y="106" font-size="12.5" fill="#E6EDF3" text-anchor="middle">latent loss</text>
+    <text x="825" y="122" font-size="10.5" fill="#9198A1" text-anchor="middle">|| ẑ[t+k] − z*[t+k] ||</text>
+
+    <!-- note -->
+    <text x="1160" y="106" font-size="10.5" fill="#9198A1" text-anchor="end">no decoder.</text>
+    <text x="1160" y="122" font-size="10.5" fill="#9198A1" text-anchor="end">no pixels reconstructed.</text>
+
+    <!-- caption -->
+    <text x="600" y="198" font-size="11.5" font-style="italic" fill="#9198A1" text-anchor="middle">fig. 2 — temporal JEPA: predict the future in latent space; no pixel reconstruction anywhere in the loop.</text>
+  </g>
+</svg>

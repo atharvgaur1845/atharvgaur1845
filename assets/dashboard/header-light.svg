@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-label="atharv/research — self-updating research dashboard. Status: experiments running.">
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+
+    <!-- logo glyph -->
+    <rect x="28" y="50" width="11" height="11" fill="#1F2328"/>
+    <rect x="43" y="50" width="11" height="11" fill="#1F2328"/>
+    <rect x="28" y="65" width="11" height="11" fill="#1F2328"/>
+    <rect x="43" y="65" width="11" height="11" fill="#5E6AD2"/>
+
+    <!-- wordmark -->
+    <text x="72" y="70" font-size="21" font-weight="600" fill="#1F2328">atharv / research</text>
+    <text x="72" y="94" font-size="11.5" fill="#59636E">representation learning · world models · bits pilani</text>
+
+    <!-- status -->
+    <circle cx="952" cy="60" r="4" fill="#3FB950"/>
+    <text x="964" y="64" font-size="11.5" fill="#1F2328">operational — experiments running</text>
+    <text x="964" y="84" font-size="10.5" fill="#59636E">self-updating profile · rebuilt on push + daily</text>
+
+    <!-- nav rule -->
+    <line x1="24" y1="136" x2="1176" y2="136" stroke="#D8DEE4" stroke-width="1"/>
+    <text x="24" y="162" font-size="10.5" letter-spacing="1" fill="#59636E">01 run&#160;&#160;&#160;&#160;02 changelog&#160;&#160;&#160;&#160;03 deploys&#160;&#160;&#160;&#160;04 ships&#160;&#160;&#160;&#160;05 library&#160;&#160;&#160;&#160;06 backlog&#160;&#160;&#160;&#160;07 stack</text>
+    <text x="1176" y="162" font-size="10.5" fill="#59636E" text-anchor="end">v2 · generated</text>
+  </g>
+</svg>

@@ -1,0 +1,79 @@
+# Experiments shown on the profile. Edit this file, never the README.
+#
+# fields:
+#   name       display name (usually the repo name)
+#   repo       owner/repo on GitHub, or null if not public yet
+#   kind       flagship | internship | practice
+#   status     active | paused | incubating | archived
+#   plate      architecture diagram under assets/lab/ (base name), or null
+#   why        one line: the motivation, not the tech
+#   result     the most important thing it has produced so far
+#   hard       what was genuinely difficult
+#   next       the next concrete step
+
+- name: multi_temporal_jepa
+  repo: atharvgaur1845/multi_temporal_jepa
+  kind: flagship
+  status: active
+  plate: plate-tjepa
+  why: >
+    Test whether latent prediction — no reconstruction — retains what matters
+    in satellite time-series, and where it collapses over long horizons.
+  result: >
+    Working training scaffold for multi-temporal JEPA on satellite sequences;
+    currently instrumenting rollout-divergence measurements.
+  hard: >
+    Preventing representation collapse without contrastive negatives, and
+    deciding what "good" latents even means when there are no labels to check.
+  next: >
+    Ablate predictor depth vs. horizon length; log divergence curves per band.
+
+- name: road-risk-gnn
+  repo: null
+  kind: flagship
+  status: incubating
+  plate: plate-roadgnn
+  why: >
+    Road risk is a property of network structure, not just of accident history —
+    a graph problem wearing a tabular disguise.
+  result: >
+    Problem formulation and dataset survey done; message-passing baseline
+    under construction.
+  hard: >
+    Label sparsity — most road segments have no recorded incidents, which makes
+    naive supervision nearly meaningless.
+  next: >
+    Publish the baseline repo with a clean data pipeline and honest metrics.
+
+- name: industrial time-series representation learning
+  repo: atharvgaur1845/VAEGAN_and_VQGAN_for_CWRU
+  kind: internship
+  status: paused
+  plate: plate-industrial
+  why: >
+    Can self-supervised encoders separate machine fault modes from raw
+    vibration signals, without a single label?
+  result: >
+    VAE-GAN / VQ-GAN encoders on the CWRU bearing dataset; spectral
+    preprocessing pipeline in a companion repo (timeseries-fft-matching).
+  hard: >
+    Vibration data punishes sloppy windowing — spectral leakage quietly
+    destroys everything downstream.
+  next: >
+    Revisit with a JEPA-style objective instead of generative reconstruction.
+
+- name: foundations, rebuilt by hand
+  repo: atharvgaur1845/linear_regression_form_scratch
+  kind: practice
+  status: archived
+  plate: null
+  why: >
+    You don't own a method until you've implemented it from nothing.
+  result: >
+    Linear/logistic regression, k-means compression, CNNs, U-Net segmentation
+    and anomaly detection — each written from first principles before touching
+    a framework.
+  hard: >
+    Resisting the urge to import the answer.
+  next: >
+    The series continues with attention and diffusion, one primitive at a time.
