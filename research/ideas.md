@@ -7,4 +7,3 @@ Stages: [seed] barely formed · [growing] worth a prototype · [ready] next proj
 - [seed] does temporal irregularity (uneven satellite revisit times) demand time-aware positional structure in the predictor?
 - [seed] spectral methods as a bridge between graph structure and temporal structure — same eigenproblem, two fields
 - [seed] a benchmark for "assumption breakage": perturb the assumption a method relies on, measure graceful vs. catastrophic degradation
-- [ready] road-risk GNN baseline with honest sparse-label evaluation

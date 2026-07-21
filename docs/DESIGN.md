@@ -95,11 +95,11 @@ A tiny monochrome symbol language instead of emoji — same meaning, no noise:
 |---|---|
 | `lab/banner` (fig. 0) | The identity *is* the research question: an observed latent trajectory and a predicted rollout diverging with horizon. The caption — "the interesting part is why" — is the thesis statement of the whole profile. |
 | `lab/program` (fig. 1) | Foundations → core program → dashed horizon. Dashing the future instead of listing "interests" makes ambition legible without hype. |
-| `lab/plate-*` (figs. 2–4) | One architecture diagram per project. Each encodes the project's actual claim (no decoder in JEPA; risk on the graph itself; fault clusters without labels). |
+| `lab/plate-*` (figs. 2–3) | One architecture diagram per project. Each encodes the project's actual claim (no decoder in JEPA; fault clusters without labels). |
 | `atlas/map` | The same knowledge, drawn as territory: charted regions, uncharted dashed circles, expedition routes. |
 | `generated/trace` | Commit activity as a seismograph strip — real data drawn in the house style, replacing third-party stat cards. |
 
-Figure numbering (fig. 0–4) is continuous across the README to reinforce the
+Figure numbering (fig. 0–3) is continuous across the README to reinforce the
 "ongoing paper" frame.
 
 ## Voice

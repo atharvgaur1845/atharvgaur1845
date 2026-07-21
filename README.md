@@ -103,15 +103,6 @@ horizon, per spectral band.</td></tr>
 </table>
 
 <table>
-<tr><td colspan="2"><samp><b>road-risk-gnn</b> · flagship · incubating</samp> &nbsp;<sub>not public yet</sub></td></tr>
-<tr><td colspan="2"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/lab/plate-roadgnn-dark.svg"><img alt="architecture diagram — road-risk-gnn" src="assets/lab/plate-roadgnn-light.svg" width="100%"></picture></td></tr>
-<tr><td valign="top" width="110"><sub><samp>WHY</samp></sub></td><td>Road risk is a property of network structure, not just of accident history — a graph problem wearing a tabular disguise.</td></tr>
-<tr><td valign="top" width="110"><sub><samp>RESULT</samp></sub></td><td>Problem formulation and dataset survey done; message-passing baseline under construction.</td></tr>
-<tr><td valign="top" width="110"><sub><samp>HARD PARTS</samp></sub></td><td>Label sparsity — most road segments have no recorded incidents, which makes naive supervision nearly meaningless.</td></tr>
-<tr><td valign="top" width="110"><sub><samp>NEXT</samp></sub></td><td>Publish the baseline repo with a clean data pipeline and honest metrics.</td></tr>
-</table>
-
-<table>
 <tr><td colspan="2"><samp><b>industrial time-series representation learning</b> · internship · paused</samp> &nbsp;<sub><a href="https://github.com/atharvgaur1845/VAEGAN_and_VQGAN_for_CWRU">repository →</a></sub></td></tr>
 <tr><td colspan="2"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/lab/plate-industrial-dark.svg"><img alt="architecture diagram — industrial time-series representation learning" src="assets/lab/plate-industrial-light.svg" width="100%"></picture></td></tr>
 <tr><td valign="top" width="110"><sub><samp>WHY</samp></sub></td><td>Can self-supervised encoders separate machine fault modes from raw vibration signals, without a single label?</td></tr>
@@ -162,7 +153,6 @@ horizon, per spectral band.</td></tr>
 
 <!-- ros:ideas -->
 <table>
-<tr><td valign="top"><sub><samp>[ready]</samp></sub></td><td>road-risk GNN baseline with honest sparse-label evaluation</td></tr>
 <tr><td valign="top"><sub><samp>[growing]</samp></sub></td><td>measure latent-space stability as an early-warning signal for representation collapse — a "seismograph" for training runs</td></tr>
 <tr><td valign="top"><sub><samp>[growing]</samp></sub></td><td>JEPA-style objective for industrial vibration data, replacing the generative CWRU pipeline</td></tr>
 <tr><td valign="top"><sub><samp>[seed]</samp></sub></td><td>does temporal irregularity (uneven satellite revisit times) demand time-aware positional structure in the predictor?</td></tr>
@@ -188,7 +178,7 @@ horizon, per spectral band.</td></tr>
 <!-- ros:colophon -->
 <div align="center">
 <sub><samp>this profile is a generated artifact — the readme is never edited by hand.</samp></sub><br>
-<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-07-21 19:54 utc</samp></sub><br>
+<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-07-21 19:59 utc</samp></sub><br>
 <sub><samp>how it works: <a href="docs/ARCHITECTURE.md">architecture</a> · <a href="docs/DESIGN.md">design system</a> · <a href="docs/CONCEPTS.md">the three concepts</a></samp></sub>
 </div>
 <!-- /ros:colophon -->
