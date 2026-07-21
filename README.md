@@ -178,7 +178,7 @@ horizon, per spectral band.</td></tr>
 <!-- ros:colophon -->
 <div align="center">
 <sub><samp>this profile is a generated artifact — the readme is never edited by hand.</samp></sub><br>
-<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-07-21 20:08 utc</samp></sub><br>
+<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-07-21 20:10 utc</samp></sub><br>
 <sub><samp>how it works: <a href="docs/ARCHITECTURE.md">architecture</a> · <a href="docs/DESIGN.md">design system</a> · <a href="docs/CONCEPTS.md">the three concepts</a></samp></sub>
 </div>
 <!-- /ros:colophon -->
