@@ -65,7 +65,7 @@ horizon, per spectral band.</td></tr>
 
 <!-- ros:activity -->
 <table>
-<tr><td valign="top"><samp>2026-07-22</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/Boundary_book"><b>Boundary_book</b></a></td><td valign="top"><sub>feed: refresh 2026-07-22T05:52Z [skip ci]</sub></td></tr>
+<tr><td valign="top"><samp>2026-07-23</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/Boundary_book"><b>Boundary_book</b></a></td><td valign="top"><sub>feed: refresh 2026-07-23T03:12Z [skip ci]</sub></td></tr>
 <tr><td valign="top"><samp>2026-07-21</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/multi_temporal_jepa"><b>multi_temporal_jepa</b></a></td><td valign="top"><sub>run_matrix.py gained `seed` and `cv_fold` columns; --resume APPENDS wit…</sub></td></tr>
 <tr><td valign="top"><samp>2026-07-11</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/7_OOP_Summer_2026_project"><b>7_OOP_Summer_2026_project</b></a></td><td valign="top"><sub>add optimization algorithm library suite (com.bits.optlib) to Part B</sub></td></tr>
 <tr><td valign="top"><samp>2026-06-11</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/resume_builder"><b>resume_builder</b></a></td><td valign="top"><sub>first commit</sub></td></tr>
@@ -178,7 +178,7 @@ horizon, per spectral band.</td></tr>
 <!-- ros:colophon -->
 <div align="center">
 <sub><samp>this profile is a generated artifact — the readme is never edited by hand.</samp></sub><br>
-<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-07-22 07:42 utc</samp></sub><br>
+<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-07-23 07:44 utc</samp></sub><br>
 <sub><samp>how it works: <a href="docs/ARCHITECTURE.md">architecture</a> · <a href="docs/DESIGN.md">design system</a> · <a href="docs/CONCEPTS.md">the three concepts</a></samp></sub>
 </div>
 <!-- /ros:colophon -->
