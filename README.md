@@ -65,14 +65,14 @@ horizon, per spectral band.</td></tr>
 
 <!-- ros:activity -->
 <table>
-<tr><td valign="top"><samp>2026-08-01</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/Boundary_book"><b>Boundary_book</b></a></td><td valign="top"><sub>feed: refresh 2026-08-01T03:15Z [skip ci]</sub></td></tr>
+<tr><td valign="top"><samp>2026-08-02</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/ChronoSched"><b>ChronoSched</b></a></td><td valign="top"><sub>fix: PDF export dead button, plus per-subject weekly distribution</sub></td></tr>
+<tr><td valign="top"><samp>2026-08-02</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/Boundary_book"><b>Boundary_book</b></a></td><td valign="top"><sub>feed: refresh 2026-08-02T03:15Z [skip ci]</sub></td></tr>
 <tr><td valign="top"><samp>2026-07-30</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/resume_builder"><b>resume_builder</b></a></td><td valign="top"><sub>made auric lab resume</sub></td></tr>
 <tr><td valign="top"><samp>2026-07-26</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/NeuralDebrisRemovalinStreakDetectionModels"><b>NeuralDebrisRemovalinStreakDetectionModels</b></a></td><td valign="top"><sub>updated rank in readme</sub></td></tr>
 <tr><td valign="top"><samp>2026-07-21</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/multi_temporal_jepa"><b>multi_temporal_jepa</b></a></td><td valign="top"><sub>run_matrix.py gained `seed` and `cv_fold` columns; --resume APPENDS wit…</sub></td></tr>
-<tr><td valign="top"><samp>2026-07-11</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/7_OOP_Summer_2026_project"><b>7_OOP_Summer_2026_project</b></a></td><td valign="top"><sub>add optimization algorithm library suite (com.bits.optlib) to Part B</sub></td></tr>
 </table>
 
-<sub><samp>auto · github api · newest repository: <a href="https://github.com/atharvgaur1845/NeuralDebrisRemovalinStreakDetectionModels">NeuralDebrisRemovalinStreakDetectionModels</a> (created 2026-07-21)</samp></sub>
+<sub><samp>auto · github api · newest repository: <a href="https://github.com/atharvgaur1845/ChronoSched">ChronoSched</a> (created 2026-08-01)</samp></sub>
 <!-- /ros:activity -->
 
 ### <samp>04 · research program</samp>
@@ -178,7 +178,7 @@ horizon, per spectral band.</td></tr>
 <!-- ros:colophon -->
 <div align="center">
 <sub><samp>this profile is a generated artifact — the readme is never edited by hand.</samp></sub><br>
-<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-08-01 07:37 utc</samp></sub><br>
+<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-08-02 07:40 utc</samp></sub><br>
 <sub><samp>how it works: <a href="docs/ARCHITECTURE.md">architecture</a> · <a href="docs/DESIGN.md">design system</a> · <a href="docs/CONCEPTS.md">the three concepts</a></samp></sub>
 </div>
 <!-- /ros:colophon -->
