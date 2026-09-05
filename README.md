@@ -65,7 +65,7 @@ horizon, per spectral band.</td></tr>
 
 <!-- ros:activity -->
 <table>
-<tr><td valign="top"><samp>2026-09-04</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/Boundary_book"><b>Boundary_book</b></a></td><td valign="top"><sub>feed: refresh 2026-09-04T03:35Z [skip ci]</sub></td></tr>
+<tr><td valign="top"><samp>2026-09-05</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/Boundary_book"><b>Boundary_book</b></a></td><td valign="top"><sub>feed: refresh 2026-09-05T03:36Z [skip ci]</sub></td></tr>
 <tr><td valign="top"><samp>2026-08-26</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/multi_temporal_jepa"><b>multi_temporal_jepa</b></a></td><td valign="top"><sub>Recorded in the runbook, and 01_stage_pastis.sh now exports the overrid…</sub></td></tr>
 <tr><td valign="top"><samp>2026-08-17</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/flow_game"><b>flow_game</b></a></td><td valign="top"><sub>Replace room-timer death with overtime across all three builds</sub></td></tr>
 <tr><td valign="top"><samp>2026-08-05</samp></td><td valign="top"><a href="https://github.com/atharvgaur1845/NeuralDebrisRemovalinStreakDetectionModels"><b>NeuralDebrisRemovalinStreakDetectionModels</b></a></td><td valign="top"><sub>Update README</sub></td></tr>
@@ -178,7 +178,7 @@ horizon, per spectral band.</td></tr>
 <!-- ros:colophon -->
 <div align="center">
 <sub><samp>this profile is a generated artifact — the readme is never edited by hand.</samp></sub><br>
-<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-09-04 09:37 utc</samp></sub><br>
+<sub><samp>layout templates/lab.md · data research/ papers/ projects.yml + github api · builder <a href="scripts/build_readme.py">build_readme.py</a> via <a href=".github/workflows/build.yml">build.yml</a> (on push + daily) · last build 2026-09-05 09:03 utc</samp></sub><br>
 <sub><samp>how it works: <a href="docs/ARCHITECTURE.md">architecture</a> · <a href="docs/DESIGN.md">design system</a> · <a href="docs/CONCEPTS.md">the three concepts</a></samp></sub>
 </div>
 <!-- /ros:colophon -->
