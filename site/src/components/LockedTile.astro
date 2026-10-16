@@ -1,0 +1,50 @@
+---
+import type { CollectionEntry } from 'astro:content';
+interface Props { entry: CollectionEntry<'entries'> }
+const e = Astro.props.entry.data;
+const sketches: Record<string, string> = {
+  deca: '<circle cx="60" cy="50" r="14"/><circle cx="150" cy="35" r="14"/><circle cx="240" cy="55" r="14"/><circle cx="100" cy="115" r="14"/><circle cx="205" cy="112" r="14"/><path d="M74 50L136 37M164 37L226 53M70 60L92 102M114 113L191 112M219 103L236 69M150 49L110 103M150 49L196 99"/>',
+  physmon: '<rect x="30" y="30" width="60" height="90" rx="4"/><rect x="120" y="20" width="60" height="110" rx="4"/><rect x="210" y="40" width="60" height="70" rx="4"/><path d="M90 75H120M180 75H210M40 50H80M40 65H80M130 45H170M130 60H170M130 75H170M220 60H260"/>',
+};
+const sketch = sketches[e.id] ?? sketches.deca;
+const pal = e.palette;
+const style = pal ? `--c-bg:${pal.bg};--c-tint:${pal.tint};--c-accent:${pal.accent}` : undefined;
+const LOCK = '<path d="M5 2h6v1h1v4h-1V3H5v4H4V3h1z" fill="#172036"/><rect x="3" y="7" width="10" height="8" fill="#172036"/><rect x="4" y="8" width="8" height="6" fill="#E6E6EC"/><rect x="7" y="9" width="2" height="2" fill="#F2A0B2"/><rect x="7.5" y="11" width="1" height="2" fill="#F2A0B2"/>';
+---
+<article class={`tile locked span-${e.span} kind-${e.kind}`} data-tile={e.id} data-kind={e.kind} style={style}>
+  <div class="lk-card">
+    <div class="lk-eyebrow mono" data-text><span>Research · {e.domain}</span><b>Confidential · {e.year}</b></div>
+    <h3 id={`t-${e.id}`} data-text>{e.title}</h3>
+    <p class="lk-line" data-text>{e.lab}</p>
+    <div class="lk-art" aria-hidden="true">
+      <svg viewBox="0 0 300 150"><g class="lk-sketch" set:html={sketch} /></svg>
+      <div class="lk-lock"><svg viewBox="0 0 16 16" width="56" height="56" shape-rendering="crispEdges" set:html={LOCK} /></div>
+    </div>
+    <div class="lk-foot" data-text><span>Research · confidential · {e.year}</span><a class="lk-btn" href={`/p/${e.id}/`} data-lk={e.id} data-name={e.title} data-q={e.lab}>More info<span class="sr-only"> about {e.title}</span></a></div>
+  </div>
+  <button class="pip" type="button" data-pip={e.id} aria-label={`Ask Probe about ${e.title}`}>?</button>
+</article>
+<style>
+  .tile { grid-column: span 12; min-width: 0; position: relative; }
+  .lk-card { height: 100%; display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 10px; padding: 16px 16px 0; background: var(--c-bg); border: 1.5px dashed color-mix(in srgb, var(--c-accent) 55%, var(--grid)); border-radius: var(--r-tile); box-shadow: var(--sh-tile); overflow: hidden; transition: box-shadow .25s; }
+  .lk-card:hover { box-shadow: 8px 8px 0 color-mix(in srgb, var(--c-accent) 35%, var(--shadow)); }
+  .lk-eyebrow { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; line-height: 1.3; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+  .lk-eyebrow b { color: var(--c-accent); font-weight: 600; text-align: right; }
+  h3 { font: 700 26px/1.05 var(--font-body); letter-spacing: -.02em; }
+  .lk-line { font-size: 14px; line-height: 1.45; }
+  .lk-art { position: relative; min-height: 96px; background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; align-self: end; }
+  .lk-art svg { display: block; width: 100%; height: auto; max-height: 150px; }
+  .lk-sketch { fill: none; stroke: #9AA0B4; stroke-width: 3; filter: blur(3.5px); opacity: .7; transition: filter .4s; }
+  .lk-card:hover .lk-sketch { filter: blur(5px); }
+  .lk-lock { position: absolute; inset: 0; display: grid; place-items: center; }
+  .lk-lock svg { width: 56px; height: 56px; image-rendering: pixelated; }
+  .lk-card:hover .lk-lock svg { animation: lk-shake .5s; }
+  @keyframes lk-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 50% { transform: rotate(7deg); } 75% { transform: rotate(-4deg); } }
+  .lk-foot { margin: 0 -16px; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+  .lk-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; font: 600 12px var(--font-mono); border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); text-decoration: none; transition: background .2s, color .2s; }
+  .lk-btn:hover, .lk-btn:focus-visible { background: var(--ink); color: #fff; }
+  :global(html[data-probe-pips]) .lk-eyebrow { padding-right: 28px; }
+  @media (prefers-reduced-motion: reduce) { .lk-card:hover .lk-lock svg { animation: none; } }
+  @media (min-width: 720px) { .tile { grid-column: span 6; } }
+  @media (min-width: 1024px) { .tile { grid-column: span 3; } }
+</style>

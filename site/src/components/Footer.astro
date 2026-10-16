@@ -1,0 +1,18 @@
+---
+const updated = new Date().toISOString().slice(0, 10);
+---
+<footer class="foot">
+  <div class="wrap in">
+    <p>Built by hand on a graph-paper grid. <a href="https://github.com/atharvgaur1845/atharvgaur1845">Source on GitHub</a>.</p>
+    <p class="meta">Last updated {updated}</p>
+    <div class="tg">
+      <button class="btn" type="button" data-probe-toggle aria-pressed="true"><span data-probe-label>Probe: on</span></button>
+    </div>
+  </div>
+</footer>
+<style>
+  .foot { margin-top: var(--section-gap); border-top: var(--bw-shelf) solid var(--ink); background: var(--surface); padding-block: 24px; }
+  .in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+  .tg { display: flex; gap: 12px; }
+  a { display: inline-block; padding: 8px 0; }
+</style>

@@ -1,0 +1,64 @@
+---
+import { marked } from 'marked';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { CollectionEntry } from 'astro:content';
+import Figure from './Figure.astro';
+import type { FigureId } from './figures';
+import { getNotes } from '../lib/data';
+interface Props { entry: CollectionEntry<'entries'>; open?: boolean }
+const { entry, open = false } = Astro.props;
+const e = entry.data;
+const id = e.id;
+const file = join(process.cwd(), 'src/content/panels', `${id}.md`);
+if (!existsSync(file)) throw new Error(`Panel copy missing: src/content/panels/${id}.md`);
+const raw = readFileSync(file, 'utf8');
+const note = (await getNotes()).find((n) => n.data.entry === id);
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const parts = raw.split(/^## /m).slice(1).map((p) => {
+  const nl = p.indexOf('\n');
+  return { title: p.slice(0, nl).trim(), body: p.slice(nl + 1).trim() };
+});
+const WIDE = new Set(['map', 'decisions', 'evidence', 'plan-and-gates']);
+const sections = parts.map((p) => {
+  const key = slug(p.title);
+  const special = /^\([^\n]*\)$/.test(p.body) ? 'figure' : null;
+  let html = '';
+  if (!special) {
+    html = marked.parse(p.body, { gfm: true, async: false }) as string;
+    html = html
+      .replace(/<table>/g, `<div class="p-tbl" tabindex="0" role="region" aria-label="${p.title.toLowerCase()} table, scroll sideways on narrow screens"><table>`).replace(/<\/table>/g, '</table></div>')
+      .replace(/(<tbody>[\s\S]*?<\/tbody>)/g, (b) => b.replace(/<tr>\s*<td>([\s\S]*?)<\/td>/g, '<tr><th scope="row">$1</th>'))
+      .replace(/<a href="(https?:[^"]+)"/g, '<a href="$1" rel="noopener"');
+    if (key === 'links' && note) html = html.replace('</ul>', `<li>Field note: <a href="/notes/${note.id}/">${note.data.title}</a></li></ul>`);
+  }
+  return { ...p, key, special, html, wide: WIDE.has(key) };
+});
+const shelf = e.shelf;
+const pal = e.palette!;
+const style = `--c-accent:${pal.accent};--c-tint:${pal.tint};--c-bg:${pal.bg}`;
+---
+<div id={`panel-${id}`} class="p-root" data-panel={id} data-open={open ? '' : undefined} hidden={!open} style={style}>
+  <a class="p-backdrop" href="/" data-close tabindex="-1" aria-label="Close panel"></a>
+  <div class="p-win" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`}>
+    <header class="p-head">
+      <a class="p-back" href={`/#${shelf}`} data-close>← <span>back to {shelf} shelf</span></a>
+      <h2 id={`${id}-title`} class="p-title" tabindex="-1">{e.title}</h2>
+      <ul class="p-chips">{e.chips.map((c) => <li class="chip">{c}</li>)}</ul>
+      <a class="p-x" href="/" data-close aria-label="Close panel"><span aria-hidden="true">×</span></a>
+    </header>
+    <nav class="p-idx" aria-label="Sections in this panel">
+      {sections.map((s, i) => <a href={`#${id}-${s.key}`} data-spy={`${id}-${s.key}`} aria-current={i === 0 ? 'true' : undefined}>{s.title.toLowerCase()}</a>)}
+    </nav>
+    <div class="p-body">
+      {sections.map((s) => (
+        <section id={`${id}-${s.key}`} data-wide={s.wide ? '' : undefined}>
+          <h3>{s.title}</h3>
+          {s.special === 'figure' && <Figure id={id as FigureId} />}
+          {!s.special && <div class="p-md" set:html={s.html} />}
+        </section>
+      ))}
+    </div>
+  </div>
+  <div class="p-tip" role="presentation" aria-hidden="true"></div>
+</div>

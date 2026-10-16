@@ -1,0 +1,20 @@
+- id: site
+  name: Atharv Sharma
+  degree: B.E. Electrical and Electronics Engineering
+  institution: BITS Pilani, K K Birla Goa Campus
+  wordmark: atharv
+  contacts:
+    - { id: github, label: GitHub, url: "https://github.com/atharvgaur1845" }
+    - { id: openreview, label: OpenReview, url: "https://openreview.net/profile?id=%7EAtharv_Sharma1" }
+    - { id: researchgate, label: ResearchGate, url: "https://www.researchgate.net/profile/Atharv-Sharma-7" }
+    - { id: linkedin, label: LinkedIn, url: "https://www.linkedin.com/in/atharv-a9ag200719a" }
+    - { id: x, label: X, url: "https://x.com/tarkrishi", text: "@tarkrishi" }
+    - { id: email, label: Email, url: "mailto:atharvgaur591@gmail.com", text: "atharvgaur591@gmail.com" }
+  sections:
+    - { id: hero, label: lab, enabled: true }
+    - { id: research, label: research, enabled: true }
+    - { id: achievements, label: achievements, enabled: true }
+    - { id: projects, label: projects, enabled: true }
+    - { id: oss, label: open source, enabled: true }
+    - { id: skills, label: skills, enabled: true }
+    - { id: contact, label: contact, enabled: true }

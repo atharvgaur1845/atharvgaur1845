@@ -1,0 +1,90 @@
+---
+title: "The floor moves with the probe"
+subtitle: "A walkthrough of a REO @ NeurIPS 2026 workshop paper on trivial baselines for satellite self-supervised learning"
+entry: reo2-floor
+date: 2026-10-16
+draft: false
+sources: "multi_temporal_jepa branch reo2-probe-capacity, REO-2/paper/main.tex (final), REO-2/RESULTS.md, REO-2/STATUS.md"
+---
+import Figure from '../../components/Figure.astro';
+
+{/* Every number traces to the final paper (reo2-probe-capacity branch) unless marked. Neutral voice. No em dashes. */}
+
+## The question
+
+Satellites image the same field every few days, and a crop is defined by how it changes over a season. Self-supervised objectives for satellite imagery are usually compared against each other. They are rarely compared against something trivial.
+
+The project started as a comparison of one objective against the standard ones: predict the latent state of a location at a future acquisition from its past (temporal JEPA). The benchmark initially had no trivial floor. Adding two changed the conclusion.
+
+## Setup
+
+- **Data:** PASTIS crop segmentation, official 5-fold split, validation fold, 10 Sentinel-2 bands, 128 × 128 patches, series truncated to at most 32 acquisitions (PASTIS has 38 to 61) for every cell including the floors. {/* ev: R1.setup */}
+- **Encoder:** a shared ViT over 8 × 8 patches (256 tokens, width 512) and a causal temporal transformer. A narrower predictor maps the past to the stop-gradient EMA target embedding of a future frame. A variance-covariance penalty on the context embedding prevents a constant solution. {/* ev: R1.method */}
+- **Objectives compared:** temporal JEPA, spatial JEPA, SimCLR, BYOL, MAE.
+- **Two floors:**
+  - `raw_features`: no encoder, no parameters. The raw bands averaged over each 8 × 8 patch, then over time. A 10-dimensional composite.
+  - `random`: the temporal architecture with weights never trained.
+- **Matched:** 100 epochs, per-step batch 12, effective batch 192, 15-epoch probe. **Not matched:** compute. Temporal JEPA uses 6.24 GPU-hours per seed against MAE's 0.55. {/* ev: R1.matching */}
+- **Readouts:** linear head, small convolutional head, parcel k-NN (k = 20). Encoders frozen.
+- **Pre-registration:** before running the floors, a timestamped rule: the claim holds only if temporal JEPA beats both floors and the margin over the larger floor exceeds the across-seed standard deviation, reported either way. {/* ev: R1.prereg */}
+
+## Result at the conventional probe
+
+| Objective | conv mIoU (receptive field 3) | n |
+|---|---|---|
+| Temporal JEPA | 19.26 ± 1.30 | 3 |
+| *raw features (floor)* | *14.47 ± 0.01* | 3 |
+| *random init (floor)* | *11.15 ± 0.20* | 3 |
+| Spatial JEPA | 13.90 ± 1.13 | 3 |
+| SimCLR | 7.96 ± 0.28 | 2 |
+| BYOL | 6.58 ± 0.89 | 2 |
+| MAE | 6.57 ± 2.46 | 3 |
+
+{/* ev: R1.table-main */}
+
+At this probe the pre-registered rule passes: temporal JEPA clears the raw-band floor by 4.78 mIoU, 3.7 across-seed standard deviations. Spatial JEPA is within half a standard deviation of a baseline with no encoder. MAE, BYOL and SimCLR sit below it.
+
+## The floor moves
+
+The probe heads differ only in spatial receptive field. Receptive field 1 is a strict linear probe, 3 is the convolutional head above, and 5 and 9 add stacked 3 × 3 convolutions.
+
+| Receptive field | raw floor | random floor | temporal JEPA | margin over raw floor |
+|---|---|---|---|---|
+| 1 | 4.76 ± 0.02 | 8.41 ± 0.15 | 15.32 ± 1.13 | +10.56 ± 1.12 |
+| 3 | 14.47 ± 0.01 | 11.15 ± 0.20 | 19.26 ± 1.30 | +4.78 ± 1.30 |
+| 5 | 20.24 ± 0.02 | 12.31 ± 0.78 | 20.09 ± 1.29 | −0.15 ± 1.28 |
+| 9 | 21.45 ± 0.14 | 8.62 ± 2.85 | 19.88 ± 1.39 | −1.57 ± 1.28 |
+
+{/* ev: R1.capacity-n3 (RESULTS.md, paper Fig. capacity) */}
+
+<div class="breakout"><Figure id="reo2-floor" /></div>
+
+The zero-parameter floor rises by a factor of 4.5. The encoder moves from 15.32 to 19.88. The margin falls monotonically and is gone by receptive field 5. The paper does not claim a reversal at 9: at 1.2 standard deviations the sign is not established. What is established is that the measured advantage over a baseline with no parameters disappears once the probe can mix over a 5 × 5 neighbourhood.
+
+The pre-registered rule inherited the same blind spot. It fixed the convolutional readout before probe capacity was known to matter. Across the sweep it passes at receptive fields 1 and 3 and fails at 5 and 9.
+
+## What the margin is made of
+
+- **Temporal axis, mostly not the future.** A shuffled-time control (frames permuted, dates left in order) kept about 70% of the conv margin at seed 0: 18.38 against 20.03, with a 14.48 floor. Single seed. {/* ev: R1.shuffle */}
+- **The anti-collapse penalty is load-bearing.** Without it, effective rank of the pooled embedding falls from 312.4 to 1.49 of 512 and conv mIoU drops from 20.03 to 8.68, below both floors. Single seed. {/* ev: R1.collapse */}
+- **The representation does learn something temporal.** Acquisition month decodes from frozen spatial features at 63.9% for temporal JEPA against 47.0% for spatial JEPA (chance 8.3%). It learns; it just does not add much over the raw bands once the probe can mix spatially. {/* ev: R1.mech */}
+
+## How the paper changed
+
+The project's first draft was titled "Temporal Redundancy Breaks JEPA on Satellite Image Time Series" and argued that temporal prediction beats spatial masking. Two things moved it:
+
+1. Seeds 1 and 2 of the original matrix failed at step 0 with out-of-memory errors on a shared 48 GB GPU, so the reported spread could not be recomputed. The runs were redone. {/* ev: R1.history-STATUS */}
+2. The floors were run as the first priority, because the pre-registration made the headline claim unassessable without them. Their result reframed the paper around probe capacity on 2026-09-02. {/* ev: R1.history-RESULTS */}
+
+## What it does not establish
+
+- n = 3 seeds (SimCLR and BYOL n = 2); the collapse ablation and shuffled-time control are single-seed.
+- Frozen probes on one dataset, truncated to 32 acquisitions, no fine-tuning.
+- The capacity sweep keeps a fixed 15-epoch probe budget, so capacity and ease of optimisation are not separated.
+- SimCLR uses the negative count its batch allows, smaller than usual tuning.
+
+## Recommendation from the paper
+
+Report floors at every probe capacity used, and read a margin as a property of the (objective, probe) pair rather than of the objective.
+
+[Code (reo2-probe-capacity branch)](https://github.com/atharvgaur1845/multi_temporal_jepa/tree/reo2-probe-capacity/REO-2) · Status: accepted to the 2nd Workshop on Advances in Representation Learning for Earth Observation (REO), NeurIPS 2026; camera-ready forthcoming.

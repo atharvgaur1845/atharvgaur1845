@@ -1,0 +1,3 @@
+- { id: deca, order: 1, title: DECA, status: confidential, entry: deca, line: "Can identical LLM agents build their own coordination protocol with no orchestrator?" }
+- { id: physmon, order: 2, title: PhysMon, status: confidential, entry: physmon, line: "Can a model's hidden states show when it is using a physics shortcut instead of the physics?" }
+- { id: flashlob, order: 3, title: FlashLOB, status: runs pending, entry: flashlob, line: "Does long order-book history carry volatility signal, and can a structured sparse attention kernel make that context affordable?" }

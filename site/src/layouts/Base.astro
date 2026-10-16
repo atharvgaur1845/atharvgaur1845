@@ -1,0 +1,101 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/panel.css';
+import atk400 from '@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-400-normal.woff2?url';
+import atk700 from '@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-700-normal.woff2?url';
+import pix400 from '@fontsource/pixelify-sans/files/pixelify-sans-latin-400-normal.woff2?url';
+interface Props { title: string; description?: string; image?: string; noindex?: boolean }
+const { title, description = 'Atharv Sharma: machine learning research and engineering.', image = '/og/home.png', noindex = false } = Astro.props;
+const site = Astro.site ?? new URL('https://atharvgaur1845.github.io');
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImage = new URL(image, site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light" />
+    <link rel="preload" href={atk400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={atk700} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={pix400} as="font" type="font/woff2" crossorigin />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Atharv Sharma" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+    <div id="probe-live" class="sr-only" role="status" aria-live="polite"></div>
+    <script>
+      // Probe toggles (nav + footer): one shared preference, default on. On /notes/ Probe is not
+      // loaded and shows as off until the visitor asks for it.
+      import { getOn, setOn } from '../companion/pref';
+      const lazyPage = location.pathname.startsWith('/notes/');
+      let shown = lazyPage ? false : getOn();
+      const live = document.getElementById('probe-live');
+      const paintProbe = () =>
+        document.querySelectorAll<HTMLButtonElement>('[data-probe-toggle]').forEach((b) => {
+          b.setAttribute('aria-pressed', String(shown));
+          const l = b.querySelector('[data-probe-label]');
+          if (l) l.textContent = shown ? 'Probe: on' : 'Probe: off';
+        });
+      paintProbe();
+      document.querySelectorAll('[data-probe-toggle]').forEach((b) =>
+        b.addEventListener('click', () => {
+          shown = !shown;
+          setOn(shown);
+          paintProbe();
+          if (live) live.textContent = shown ? 'Probe is on' : 'Probe is off';
+          if (shown && lazyPage) import('../islands/mountProbe').then((m) => m.mountProbe());
+        }));
+
+      // copy email
+      document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((b) =>
+        b.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(b.dataset.copy ?? ''); b.textContent = 'copied'; }
+          catch { b.textContent = 'select the text'; }
+          setTimeout(() => (b.textContent = 'copy'), 1800);
+        }));
+
+      // mobile menu
+      const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-btn]');
+      const menu = document.getElementById('nav-links');
+      menuBtn?.addEventListener('click', () => {
+        const open = menuBtn.getAttribute('aria-expanded') !== 'true';
+        menuBtn.setAttribute('aria-expanded', String(open));
+        menu?.toggleAttribute('data-open', open);
+      });
+      menu?.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) { menu.removeAttribute('data-open'); menuBtn?.setAttribute('aria-expanded', 'false'); }
+      });
+
+      // scroll-spy: amber LED on current section
+      const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-spy]')];
+      const secs = links.map((a) => document.getElementById(a.dataset.spy!)).filter(Boolean) as HTMLElement[];
+      if (secs.length && 'IntersectionObserver' in window) {
+        const io = new IntersectionObserver((es) => {
+          es.forEach((e) => { if (e.isIntersecting) links.forEach((a) =>
+            a.toggleAttribute('data-current', a.dataset.spy === e.target.id)); });
+        }, { rootMargin: '-45% 0px -50% 0px' });
+        secs.forEach((s) => io.observe(s));
+      }
+    </script>
+  </body>
+</html>

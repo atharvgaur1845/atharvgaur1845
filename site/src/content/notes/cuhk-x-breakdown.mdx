@@ -1,0 +1,122 @@
+---
+title: "Five sensors, one 96 MB file"
+subtitle: "A solution breakdown for the CUHK-X Challenge, Small Model Track"
+entry: cuhk-x
+date: 2026-10-16
+draft: false
+sources: "CUHK-X-CompetitionSmallModelTrack docs/REPORT_DRAFT.md, package/README.md, research/OBJECTIVE.md, research/LEADERBOARD.md; organizer emails (memory.md A1)"
+---
+{/* Every number carries an evidence comment. Voice: neutral engineering. No em dashes. */}
+
+## What the task asked
+
+The CUHK-X Challenge at UbiComp/ISWC 2026 asked for 40-class human activity recognition from privacy-preserving sensors: infrared, depth, thermal, skeleton, five wearable IMUs and radar. {/* ev: A1.task */} Training data covered 2,933 clips from 18 people. The 405 test clips came from four people the model never saw, split into 201 public and 204 private clips. {/* ev: A1.splits */}
+
+The Small Model Track added three constraints:
+
+- One file of at most 100 MB must hold every parameter used at inference, detectors included.
+- Accuracy is plain top-1. Every test clip counts the same.
+- The top 15 teams on the private leaderboard move to a Selection Stage, where the organizers reproduce the solution from the submitted package. {/* ev: A1.organizer-email-1 */}
+
+So the solution had to be accurate on unseen people, small, and reproducible by someone else from raw frames.
+
+## The noise floor
+
+The public split contains four subjects. Subject sampling alone moves a public score by about 6.9 clips at one standard error, and no number of seeds reduces that. {/* ev: A1.noise-EXP-141 */} A one-clip gain on the public board is therefore weak evidence by itself. Every change below was judged on cross-validation and a stated mechanism before a submission was spent on it.
+
+## Five specialists
+
+| Member | Input | Model | Why it exists |
+|---|---|---|---|
+| Person view | IR + depth crop around the person, 384 px, 16 frames | MViTv2-S | Body pose and motion |
+| Wrist view | IR + depth crop around both wrists, 224 px | MViTv2-S | Hand activity (reading vs turning pages) |
+| Thermal view | Full thermal frame, 224 px | MViTv2-S, weight soup of 4 folds | Heat of objects and body |
+| Skeleton / IMU stack | 17-joint skeleton + 5 IMUs in world frame | 20 members: ST-GCN, TCN families | Posture and wearable motion |
+| IMU statistics | 545 per-device statistics | ExtraTrees, stored as tensors | Cheap, independent signal |
+
+{/* ev: A1.members */}
+
+Two measured findings shaped the video members:
+
+- **Resolution helps only where the crop is large relative to the source frame.** The person view improved monotonically from 224 to 288 to 384 px (pooled OOF 0.71444, 0.72963, 0.73333). The same step cost the wrist view 1.36 points and did nothing for thermal. {/* ev: A1.EXP-154 */}
+- **Thermal became useful at full frame and 224 px.** It reached 0.62700 pooled OOF against 0.56800 for the earlier 128 px member, and was the first thermal member to help the fusion. {/* ev: A1.EXP-139 */}
+
+The IMU features drop absolute orientation on purpose. How a device is mounted differs per person, so orientation leaks subject identity instead of activity. {/* ev: A1.imu-world-frame */}
+
+## Fusion in the right prior space
+
+The members are combined as a weighted sum of log-probabilities. The video members are trained with a prior-corrected loss and output uniform-prior posteriors. The skeleton stack uses plain cross-entropy and outputs train-prior posteriors, so it is divided by the training class prior before fusion. Getting that direction wrong cost 4 points in an early submission (0.587 against 0.627). {/* ev: A1.prior-bug */}
+
+Weights were chosen by nested cross-validation: person 0.2359, wrist 0.1807, thermal 0.17, skeleton 0.332, IMU 0.2967, prior 0.25. {/* ev: A1.weights-EXP-158 */}
+
+## The ordered transition decoder
+
+Each subject records the activities in a scripted order. A first-order transition model over activity classes, fitted on training metadata only, is applied by beam search over each test subject's clip sequence, with a soft penalty on repeated labels. It added 10.4 points on pooled OOF and 3 to 5 clips on the public board. {/* ev: A1.decoder-EXP-125 */}
+
+The gap between those two numbers is the lesson: out-of-fold gains on this data overstated public gains, so the decoder was kept for a measured public effect, not for its OOF number.
+
+## Fitting in 100 MB
+
+| Component | Size | How |
+|---|---|---|
+| 3 × MViTv2-S | 64.79 MB | int5 weights, per output channel, codes bit-packed |
+| Skeleton / IMU stack | 18.93 MB | int8 per tensor, then DEFLATE |
+| YOLO11n + YOLO11n-pose | 10.30 MB | fp16 |
+| IMU ExtraTrees | 1.58 MB | trees stored as tensors |
+| Test crop windows | 0.01 MB | see Reproduction |
+| **Total** | **96.37 MB** | |
+
+{/* ev: A1.budget */}
+
+The detectors stay at fp16 because quantizing them was not free: int8 moved 150 of 405 crop windows. {/* ev: A1.EXP-149 */} int5 on the video members cost one public clip against int8, which the thermal weight soup recovered. {/* ev: A1.EXP-151-153 */}
+
+## Reproduction
+
+`inference.sh` rebuilds the submission from raw frames inside a Docker image with no network access. It reproduced the scored file with zero differing rows on the development laptop (RTX 4060) and in a clean directory on an A100, in 2 minutes 39 seconds. {/* ev: A1.EXP-159 */}
+
+One step drifted across machines: the crop window. Recomputing windows on a different GPU reproduced only 184 of 405 person windows and 14 of 405 wrist windows, which moved 22 final predictions. The package therefore ships the 405 test windows and runs the packaged detectors live only for clips it has not seen. {/* ev: A1.window-drift */}
+
+## How the score moved
+
+| Public score | What changed |
+|---|---|
+| 112 / 201 | Ordered transition decoding on the legal package output |
+| 125 / 201 | Visual member reweighted on the public board (w = 0.35) |
+| 166 / 201 | Stronger members and fusion (several logged steps between 2026-08-02 and 2026-09-03) |
+| 167 / 201 | Distinctness penalty in the decoder (+1 clip, net of 6 changed rows) |
+| 174 / 201 | Final five-member package with person view at 384 px and thermal soup |
+
+{/* ev: A1.ladder (LEADERBOARD.md) */}
+
+## What did not work
+
+All measured; experiment ids refer to the project log.
+
+| Idea | Result |
+|---|---|
+| Frozen V-JEPA 2 ViT-L as a teacher | 0.419 against 0.712 for our own member (EXP-135) |
+| Seed soup | −2.39 points, 4 of 4 folds (EXP-148) |
+| Temporal test-time augmentation | Member gain did not survive fusion (EXP-146) |
+| Per-subject transductive alignment | Block purity 0.339 (EXP-133/137) |
+| COCO detector as an object channel | AUC 0.502 (EXP-134) |
+| Pair verifier on trunk features | AUC 0.588 (EXP-147) |
+| Transductive self-training on test clips | Member +1.38, fusion −2 (EXP-156) |
+| Learned re-ranker over posteriors | Below base rate (EXP-131) |
+
+{/* ev: A1.dead-ends */}
+
+The common cause: the remaining error is per-subject and correlated. 229 of 658 out-of-fold errors repeat the same confusion inside one subject, and near-duplicate recordings share the identical wrong label 68% of the time. Every idea above assumes independent evidence. {/* ev: A1.EXP-132-156-157 */}
+
+## Outcome
+
+- 14th of 326 teams on the final private leaderboard (0.87745), up three places from 17th on the public board (0.86567). {/* ev: A1.kaggle-private-rank */}
+- Top 15 on the private leaderboard moved on to the Selection Stage, where organizers reproduced the package. {/* ev: A1.organizer-email-1 */}
+- Selected to present a poster at the CUHK-X Challenge Grand Finals, UbiComp/ISWC 2026, Shanghai, 12 October 2026. {/* ev: A1.organizer-email-2 */}
+
+## Limits
+
+- Eight teams scored above 0.90 publicly. The members hold the information (an oracle that picks the right member reaches 0.877) but the fusion cannot select it under subject shift. {/* ev: A1.oracle-EXP-123 */}
+- The skeleton stack's original build command predates the project's logging discipline; its weights ship verbatim.
+- The decoder couples predictions within a subject's sequence, so one corrupted clip can move its neighbours.
+
+[Repository](https://github.com/atharvgaur1845/CUHK-X-CompetitionSmallModelTrack)

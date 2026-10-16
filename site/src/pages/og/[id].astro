@@ -1,0 +1,57 @@
+---
+// Template for share images. scripts/og.mjs screenshots each route at 1200x630 after the build, then removes these pages.
+import '../../styles/tokens.css';
+import '../../styles/base.css';
+import TileViz from '../../components/TileViz.astro';
+import { getEntries } from '../../lib/data';
+import { MAP } from '../../companion/sprite';
+export async function getStaticPaths() {
+  const entries = await getEntries();
+  return [{ params: { id: 'home' }, props: { entry: undefined } }, ...entries.map((e) => ({ params: { id: e.data.id }, props: { entry: e } }))];
+}
+const { entry } = Astro.props;
+const e = entry?.data;
+const pal = e?.palette;
+const style = pal ? `--c-bg:${pal.bg};--c-tint:${pal.tint};--c-accent:${pal.accent};--c-accent2:${pal.accent2}` : `--c-bg:var(--bg);--c-tint:#E3EBFF;--c-accent:var(--accent);--c-accent2:var(--led)`;
+const KIND = { research: 'RESEARCH', achievement: 'ACHIEVEMENT', project: 'PROJECT', oss: 'OPEN SOURCE' } as const;
+const COL: Record<string, string> = { o: '#3E3532', w: '#FAF5EF', s: '#E5D6CA', k: '#1A1414', m: '#3E3532', p: '#F2A0B2', B: '#7BD8F5', H: '#FFFFFF' };
+const px = MAP.flatMap((r, y) => [...r].map((c, x) => (COL[c] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${COL[c]}"/>` : ''))).join('');
+const hasViz = e && e.kind !== 'oss' && e.status !== 'confidential';
+const title = e ? e.title : 'Atharv Sharma';
+const sub = e ? (e.finding ?? e.lab) : 'I train models, then check whether the evaluation that says they work deserves to be believed.';
+---
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="robots" content="noindex" /><title>og {Astro.params.id}</title></head>
+  <body class="og" style={style}>
+    <div class="og-frame">
+      <div class="og-left">
+        <p class="og-eyebrow mono">{e ? `${KIND[e.kind]} · ${e.venue ?? e.chips[1] ?? ''}`.toUpperCase() : 'PORTFOLIO'}</p>
+        <h1 class:list={['og-title', { long: title.length > 26 }]}>{title}</h1>
+        <p class="og-sub">{sub}</p>
+        <p class="og-foot"><span class="pixel">atharv</span><span class="mono">atharvgaur1845.github.io</span></p>
+      </div>
+      <div class="og-right">
+        {hasViz && <div class="og-viz"><TileViz id={e.id} /></div>}
+        {e && !hasViz && e.status === 'confidential' && <div class="og-viz og-lock"><svg viewBox="0 0 16 16" shape-rendering="crispEdges" width="180" height="180"><path d="M5 2h6v1h1v4h-1V3H5v4H4V3h1z" fill="#172036"/><rect x="3" y="7" width="10" height="8" fill="#172036"/><rect x="4" y="8" width="8" height="6" fill="#E6E6EC"/><rect x="7" y="9" width="2" height="2" fill="#F2A0B2"/><rect x="7.5" y="11" width="1" height="2" fill="#F2A0B2"/></svg><p class="mono">CONFIDENTIAL</p></div>}
+        {e?.kind === 'oss' && <div class="og-viz og-stat"><p class="pixel">{e.oss?.right}</p></div>}
+        {!e && <svg class="og-probe" viewBox="0 0 16 20" shape-rendering="crispEdges" width="256" height="320" set:html={px} />}
+      </div>
+    </div>
+  </body>
+</html>
+<style is:global>
+  body.og { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--c-bg); }
+  .og-frame { position: relative; width: 1200px; height: 630px; display: grid; grid-template-columns: 560px 1fr; gap: 40px; padding: 56px 64px; background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px); background-size: 16px 16px; border-bottom: 10px solid var(--c-accent); }
+  .og-left { display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+  .og-eyebrow { font-size: 18px; letter-spacing: .14em; color: var(--c-accent); }
+  .og-title { font: 700 72px/1 var(--font-body); letter-spacing: -.02em; } .og-title.long { font-size: 56px; }
+  .og-sub { font-size: 24px; line-height: 1.4; color: var(--ink); max-width: 30em; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .og-foot { margin-top: 14px; display: flex; gap: 18px; align-items: baseline; font-size: 18px; color: var(--muted); }
+  .og-right { display: grid; place-items: center; }
+  .og-viz { width: 100%; background: #fff; border: 2px solid var(--ink); box-shadow: 8px 8px 0 color-mix(in srgb, var(--c-accent) 40%, var(--shadow)); padding: 16px; }
+  .og-viz svg.tz { width: 100%; height: auto; }
+  .og-lock { display: grid; place-items: center; gap: 12px; padding: 48px; }
+  .og-stat { padding: 48px 24px; text-align: center; font-size: 34px; color: var(--c-accent); }
+  .og-probe { image-rendering: pixelated; }
+</style>

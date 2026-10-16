@@ -1,0 +1,5 @@
+# local planning notes and fact ledger (contain unpublished/confidential details)
+.plans/
+# accidental local memory file
+/memory.md
+node_modules/

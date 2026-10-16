@@ -1,0 +1,31 @@
+---
+import { FIGURES, type FigureId } from './figures';
+import '../styles/figures/cuhk-x.css';
+import '../styles/figures/reo2-floor.css';
+import '../styles/figures/bidbrain.css';
+import '../styles/figures/lam.css';
+import '../styles/figures/flashlob.css';
+import '../styles/figures/flow-game.css';
+import '../styles/figures/neural-debris.css';
+import '../styles/figures/bdh-narrative.css';
+interface Props { id: FigureId; mode?: 'full' | 'tile' }
+const { id, mode = 'full' } = Astro.props;
+const f = FIGURES[id];
+const P = f.PREFIX;
+const tile = mode === 'tile';
+const inner = tile ? f.INNER.replace(/ data-tip="[^"]*"/g, '') : f.INNER.replace(/<g data-tip=/g, '<g tabindex="0" data-tip=');
+---
+{tile ? (
+  <svg class={`${P}-svg ${P}-tile`} viewBox={f.TILE_VIEWBOX} aria-hidden="true" focusable="false" set:html={inner} />
+) : (
+  <figure class={`${P}-fig`}>
+    <div class={`${P}-dia`} tabindex="0" role="region" aria-label={`${id} figure, scroll sideways on narrow screens`}>
+      <svg class={`${P}-svg`} viewBox={f.VIEWBOX} role="img" aria-label={f.ARIA} set:html={inner} />
+    </div>
+    <div class={`${P}-legend`}><span>{f.LEGEND[0]}</span><span>{f.LEGEND[1]}</span></div>
+    <details class={`${P}-text`}>
+      <summary>Text equivalent of the map</summary>
+      <ol>{f.TIPS.map((t) => <li>{t}</li>)}</ol>
+    </details>
+  </figure>
+)}

@@ -1,0 +1,60 @@
+# Builds the portfolio in site/ and publishes it to the user-site repo
+# atharvgaur1845.github.io, which GitHub Pages serves at the root domain.
+# Auth: a write deploy key on that repo; its private half is the
+# PAGES_DEPLOY_KEY secret here.
+
+name: deploy site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: install
+        run: npm ci
+
+      - name: check (content rules, types, tests)
+        run: |
+          npm run check
+          npm test
+
+      - name: build
+        run: npm run build
+
+      - name: publish to atharvgaur1845.github.io
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.PAGES_DEPLOY_KEY }}
+          external_repository: atharvgaur1845/atharvgaur1845.github.io
+          publish_branch: main
+          publish_dir: site/dist
+          force_orphan: true
+          enable_jekyll: false
+          user_name: "site-deployer"
+          user_email: "actions@users.noreply.github.com"
+          commit_message: "deploy: ${{ github.sha }}"
