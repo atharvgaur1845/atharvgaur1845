@@ -1,0 +1,39 @@
+- id: ml
+  group: ML research
+  order: 1
+  chips:
+    - { label: Self-supervised learning and probing, tiles: [reo2-floor] }
+    - { label: Experimental design and pre-registration, tiles: [reo2-floor] }
+    - { label: "Multimodal fusion, cross-subject evaluation", tiles: [cuhk-x] }
+    - { label: Video transformers (MViTv2), tiles: [cuhk-x] }
+    - { label: Graph neural nets (ST-GCN), tiles: [cuhk-x] }
+    - { label: Interpretability probes, tiles: [bdh-narrative] }
+    - { label: Data poisoning and detection triage, tiles: [neural-debris] }
+    - { label: Hierarchical RL, tiles: [flow-game] }
+- id: systems
+  group: Systems and software
+  order: 2
+  chips:
+    - { label: Model compression (int5/int8 packing), tiles: [cuhk-x] }
+    - { label: "Reproducible packaging (Docker, offline)", tiles: [cuhk-x] }
+    - { label: GPU kernels (Triton), tiles: [flashlob] }
+    - { label: "Graph data modelling (FalkorDB, Cypher)", tiles: [bidbrain] }
+    - { label: Agent tooling and MCP servers, tiles: [bidbrain, bossconsole] }
+    - { label: Security fixes in a Kotlin codebase, tiles: [bossconsole] }
+    - { label: WebGL2 and model porting to JS, tiles: [flow-game] }
+- id: electronics
+  group: Electronics and robotics
+  order: 3
+  chips:
+    - { label: "Sensor integration (IR gates, ultrasonic)", tiles: [lam] }
+    - { label: "Actuator control (pumps, arm, mecanum)", tiles: [lam] }
+    - { label: ROS 2 navigation, tiles: [erc-nav] }
+- id: tools
+  group: Tools
+  order: 4
+  chips:
+    - { label: PyTorch, tiles: [] }
+    - { label: "SLURM cluster runs (REO2, CUHK)", tiles: [reo2-floor, cuhk-x] }
+    - { label: vLLM (BidBrain), tiles: [bidbrain] }
+    - { label: Git and GitHub Actions, tiles: [] }
+    - { label: LaTeX (REO2), tiles: [reo2-floor] }

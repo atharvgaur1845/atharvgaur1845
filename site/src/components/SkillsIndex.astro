@@ -1,0 +1,44 @@
+---
+import { getCollection } from 'astro:content';
+import { getEntries } from '../lib/data';
+const groups = (await getCollection('skills')).map((g) => g.data).sort((a, b) => a.order - b.order);
+const all = await getEntries();
+const titles = new Map(all.map((e) => [e.data.id, e.data.title]));
+const isOss = new Map(all.map((e) => [e.data.id, e.data.kind === 'oss']));
+for (const g of groups) for (const c of g.chips) for (const t of c.tiles)
+  if (!titles.has(t)) throw new Error(`skills.yaml: chip "${c.label}" points to missing entry id "${t}"`);
+---
+<section id="skills" class="wrap section" aria-labelledby="h-skills">
+  <h2 id="h-skills" class="pixel">SKILLS EVIDENCE INDEX</h2>
+  <p class="meta intro">Each skill points to the work that shows it.</p>
+  <div class="groups">
+    {groups.map((g) => (
+      <div class="group">
+        <h3 class="pixel">{g.group}</h3>
+        <ul>
+          {g.chips.map((c) => (
+            <li class="chip-item">
+              <span class="chip skill">{c.label}</span>
+              {c.tiles.length > 0 && (
+                <span class="meta proof">{c.tiles.map((t, i) => (<><a href={isOss.get(t) ? '/#oss' : `/p/${t}/`}>{titles.get(t)}</a>{i < c.tiles.length - 1 ? ', ' : ''}</>))}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</section>
+<style>
+  h2 { font: 600 var(--fs-shelf)/1 var(--font-pixel); letter-spacing: .06em; margin-bottom: 8px; }
+  .intro { margin-bottom: 20px; }
+  .groups { display: grid; gap: 24px; grid-template-columns: 1fr; }
+  .group { background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-tile); padding: 16px; }
+  h3 { font: 600 14px/1.2 var(--font-pixel); margin-bottom: 12px; }
+  ul { display: flex; flex-wrap: wrap; gap: 10px 8px; }
+  .chip-item { display: flex; flex-direction: column; gap: 2px; max-width: 100%; }
+  .chip.skill { background: var(--accent); color: var(--on-accent); border-color: var(--accent); text-transform: none; letter-spacing: 0; padding: 6px 8px; line-height: 1.25; }
+  .proof { font-size: 12px; }
+  .proof a { display: inline-block; padding: 2px 0; }
+  @media (min-width: 720px) { .groups { grid-template-columns: 1fr 1fr; } }
+</style>

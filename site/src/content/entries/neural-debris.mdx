@@ -1,0 +1,20 @@
+---
+id: neural-debris
+kind: project
+status: published
+shelf: projects
+span: M
+order: 4
+year: "2026"
+title: "Neural Debris Removal"
+chips: ["PROJECT", "COMPETITION"]
+finding: "Removes poisoned detections from a frozen RetinaNet by triaging each detection, so genuine streak detections stay as they were."
+outcome: "1,039 features per detection · 4 artifact types"
+evidence:
+  - { claim: "1,039 features", ref: "P3.readme-features" }
+  - { claim: "4 artifact types", ref: "P3.readme-artifacts" }
+palette: { bg: "#EAF6FB", tint: "#D8EEF7", accent: "#0B6E99", accent2: "#BA3E0B" }
+robot:
+  dwell: "Each detection gets 1,039 features and a triage decision. Genuine streaks should stay untouched. See how?"
+  click: "Four artifact types are targeted around a frozen RetinaNet. Open it to follow one detection."
+---

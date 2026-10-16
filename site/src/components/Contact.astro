@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import { getSite } from '../lib/data';
+const site = await getSite();
+const email = site.contacts.find((c) => c.id === 'email')!;
+const others = site.contacts.filter((c) => c.id !== 'email');
+const exp = (await getCollection('experience')).map((e) => e.data).sort((a, b) => a.order - b.order);
+---
+<section id="contact" class="wrap section" aria-labelledby="h-contact">
+  <h2 id="h-contact" class="pixel">CONTACT</h2>
+  <div class="grid">
+    <div>
+      <p class="emailrow">
+        <span class="mono addr">{email.text}</span>
+        <button class="btn" type="button" data-copy={email.text}>copy</button>
+      </p>
+      <ul class="plinks">
+        {others.map((c) => <li><a href={c.url} rel="me noopener">{c.label}{c.text ? `: ${c.text}` : ''}</a></li>)}
+      </ul>
+    </div>
+    <div>
+      <h3 class="pixel">EXPERIENCE</h3>
+      <ul class="exp">
+        {exp.map((e) => <li><strong>{e.org}</strong>{e.role ? `, ${e.role}` : ''} <span class="meta">({e.period})</span></li>)}
+      </ul>
+    </div>
+  </div>
+</section>
+<style>
+  h2 { font: 600 var(--fs-shelf)/1 var(--font-pixel); letter-spacing: .06em; margin-bottom: 16px; }
+  h3 { font: 600 12px/1 var(--font-pixel); letter-spacing: .06em; margin-bottom: 8px; color: var(--muted); }
+  .grid { display: grid; gap: 32px; grid-template-columns: 1fr; }
+  .emailrow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .addr { user-select: all; font-size: 15px; overflow-wrap: anywhere; }
+  .plinks { display: flex; flex-wrap: wrap; gap: 0 20px; }
+  .plinks a { display: inline-flex; align-items: center; min-height: 44px; }
+  .exp li { padding: 4px 0; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+</style>

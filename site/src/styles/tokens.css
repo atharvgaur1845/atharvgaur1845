@@ -1,0 +1,67 @@
+/* Design tokens: light only. Each card may override --c-* from its own palette. */
+:root {
+  --bg: #F7F8FB; --grid: #E2E6EE; --surface: #FFFFFF; --ink: #172036; --muted: #5B6478; --line: #E2E6EE;
+  --accent: #2F5BD8; --on-accent: #FFFFFF; --led: #C0266D; --cheek: #F2A0B2; --shadow: #D5DBE6;
+  --backdrop: rgba(23, 32, 54, .35);
+  --sh-tile: 4px 4px 0 var(--shadow);
+  --sh-tile-hover: 6px 6px 0 var(--shadow);
+  --sh-panel: 6px 6px 0 var(--shadow);
+  color-scheme: light;
+}
+
+:root {
+  /* kind tints (same in both themes; orb pixels and chip stripe only) */
+  --kind-research: #2F5BD8;
+  --kind-achievement: #C0266D;
+  --kind-project: #0E7A5C;
+  --kind-oss: #5B3FD0;
+
+  /* type families */
+  --font-pixel: 'Pixelify Sans', ui-monospace, monospace;
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* type scale (4.2): size / line-height */
+  --fs-hero: 40px;      --lh-hero: 1.15;
+  --fs-shelf: 14px;     --lh-shelf: 1;
+  --fs-tile-l: 20px;    --lh-tile-l: 1.25;
+  --fs-tile-s: 17px;    --lh-tile-s: 1.3;
+  --fs-body: 17px;      --lh-body: 1.6;
+  --fs-note: 18px;      --lh-note: 1.7;
+  --fs-panel: 28px;     --lh-panel: 1.2;
+  --fs-meta: 14px;      --lh-meta: 1.45;
+  --fs-chip: 12px;      --lh-chip: 1;
+  --fs-bubble: 13px;    --lh-bubble: 1.5;
+  --fs-mono: 13px;      --lh-mono: 1.45;
+  --measure: 68ch;
+  --measure-note: 66ch;
+
+  /* space (base unit 4px) */
+  --u: 4px;
+  --section-gap: 96px;
+  --page-max: 1200px;
+  --gutter: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --nav-h: 44px;
+
+  /* shape */
+  --r-tile: 4px;
+  --r-chip: 2px;
+  --r-panel: 12px;
+  --r-nav: 0;
+  --bw: 2px;
+  --bw-shelf: 3px;
+
+  /* depth: hard shadows, zero blur */
+
+  /* motion */
+  --t-fast: 120ms;
+  --t-panel: 280ms;
+  --t-fade: 150ms;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+@media (max-width: 719px) {
+  :root { --section-gap: 64px; --fs-hero: 28px; --fs-body: 16px; }
+}
+@media (min-width: 1024px) {
+  :root { --gutter: 32px; }
+}

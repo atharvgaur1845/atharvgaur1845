@@ -1,0 +1,21 @@
+---
+id: bidbrain
+kind: project
+status: published
+shelf: projects
+span: L
+order: 1
+year: "2026"
+venue: "Graph Hacks"
+title: "BidBrain"
+chips: ["PROJECT", "GRAPH HACKS 2026"]
+finding: "A FalkorDB graph of 687 synthetic company documents that agents use to qualify tenders clause by clause and to prove when a required document is missing."
+outcome: "354/354 tool-sufficiency checks · synthetic data"
+evidence:
+  - { claim: "687 documents", ref: "P1.readme-corpus" }
+  - { claim: "354/354", ref: "P1.readme-eval" }
+palette: { bg: "#F3EFFC", tint: "#E9E2FA", accent: "#5B3FD0", accent2: "#B42B7A" }
+robot:
+  dwell: "Ask which works have no reference letter. A retriever can't see what's missing. The graph can."
+  click: "All 687 documents are synthetic. Open the card to watch an agent prove a letter is missing."
+---

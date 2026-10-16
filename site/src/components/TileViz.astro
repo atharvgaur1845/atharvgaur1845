@@ -1,0 +1,149 @@
+---
+// One simple, readable visual per poster card (spec: min text 12 px, ~150 to 210 px tall). Decorative: aria-hidden.
+interface Props { id: string }
+const { id } = Astro.props;
+const P: Record<string, string> = { 'reo2-floor': 'tr', 'cuhk-x': 'tc', lam: 'tl', bidbrain: 'tb', flashlob: 'tf', 'flow-game': 'tw', 'neural-debris': 'tn', 'bdh-narrative': 'td' };
+const p = P[id];
+const base = (q: string) => `.${q}-m{font:600 12px var(--font-mono);fill:var(--ink)}.${q}-b{font:700 12px var(--font-body);fill:var(--ink)}.${q}-mu{fill:var(--muted)}.${q}-a{fill:var(--c-accent)}.${q}-o{fill:var(--c-accent2)}.${q}-w{fill:#fff}.${q}-mid{text-anchor:middle}.${q}-ln{fill:none;stroke:var(--ink);stroke-width:1.5}.${q}-fl{fill:var(--c-tint);stroke:var(--ink);stroke-width:1.5}.${q}-bx{fill:#fff;stroke:var(--ink);stroke-width:1.5}`;
+const T = (cls: string) => `${p}-${cls}`;
+const V: Record<string, { svg: string; css: string }> = {};
+
+// ---- REO2: floor and encoder meet at RF 5
+V['reo2-floor'] = {
+  svg: `<text class="${T('m')} ${T('mu')}" x="4" y="12">margin +10.56 → −1.57</text>
+<path class="${T('ln')}" d="M24 92H236" style="stroke:var(--line)"/>
+<text class="${T('m')} ${T('mu')}" x="4" y="108">RF</text>
+${[[32, 1], [88, 3], [144, 5], [208, 9]].map(([x, n]) => `<text class="${T('m')} ${T('mid')}" x="${x}" y="108">${n}</text>`).join('')}
+<polyline class="${T('f')}" points="32,75.4 88,49.8 144,34.6 208,31.4"/>
+<polyline class="${T('e')}" points="32,47.6 88,37.1 144,35 208,35.5"/>
+${[[32, 75.4, 'o'], [88, 49.8, 'o'], [144, 34.6, 'o'], [208, 31.4, 'o'], [32, 47.6, 'a'], [88, 37.1, 'a'], [144, 35, 'a'], [208, 35.5, 'a']].map(([x, y, c]) => `<circle class="${T(c as string)}" cx="${x}" cy="${y}" r="3.2"/>`).join('')}
+<circle class="${T('ring')}" cx="144" cy="34.8" r="10"/>
+<text class="${T('b')} ${T('a')}" x="30" y="36">encoder</text>
+<text class="${T('b')} ${T('o')}" x="42" y="86">floor</text>`,
+  css: `.${p}-f{fill:none;stroke:var(--c-accent2);stroke-width:2.5;stroke-dasharray:260;animation:${p}-d 8s ease-out infinite}
+.${p}-e{fill:none;stroke:var(--c-accent);stroke-width:2.5;stroke-dasharray:260;animation:${p}-d 8s ease-out infinite}
+.${p}-ring{fill:none;stroke:var(--ink);stroke-width:2;opacity:0;animation:${p}-r 8s infinite}
+@keyframes ${p}-d{0%{stroke-dashoffset:260}55%,100%{stroke-dashoffset:0}}
+@keyframes ${p}-r{0%,55%{opacity:0;r:6}65%{opacity:1;r:10}85%,100%{opacity:1;r:12}}
+@media (prefers-reduced-motion:reduce){.${p}-f,.${p}-e{animation:none;stroke-dashoffset:0}.${p}-ring{animation:none;opacity:1}}`,
+};
+
+// ---- CUHK-X: five sensors to one label, one 96.37 MB file
+const sensors = ['IR', 'depth', 'thermal', 'skeleton', 'IMU'];
+V['cuhk-x'] = {
+  svg: `${sensors.map((s, i) => { const y = 8 + i * 16; return `<rect class="${T(i % 2 ? 'a' : 'o')}" x="4" y="${y - 5}" width="10" height="10" rx="${i === 0 ? 5 : i === 2 ? 1 : 3}"/><text class="${T('b')}" x="20" y="${y + 4}">${s}</text><path class="${T('flow')}" d="M70 ${y}C100 ${y} 108 40 124 40"/>`; }).join('')}
+<rect class="${T('fl')} ${T('chip')}" x="124" y="24" width="112" height="32" rx="3"/>
+<text class="${T('m')} ${T('mid')}" x="180" y="44">1 of 40 labels</text>
+<text class="${T('m')}" x="4" y="98">96.37 / 100 MB</text>
+<rect class="${T('bx')}" x="4" y="102" width="232" height="18"/>
+<rect class="${T('bar')} ${T('a')}" x="4" y="102" width="223.6" height="18"/>`,
+  css: `.${p}-flow{fill:none;stroke:var(--c-accent);stroke-width:1.5;stroke-dasharray:5 5;animation:${p}-fl 1.2s linear infinite}
+.${p}-bar{transform-origin:4px 0;animation:${p}-g 7s ease-out infinite}
+.${p}-chip{animation:${p}-c 7s infinite}
+@keyframes ${p}-fl{to{stroke-dashoffset:-10}}
+@keyframes ${p}-g{0%{transform:scaleX(0)}60%,100%{transform:scaleX(1)}}
+@keyframes ${p}-c{0%,30%{fill:var(--c-tint)}45%,100%{fill:#fff}}
+@media (prefers-reduced-motion:reduce){.${p}-flow,.${p}-bar,.${p}-chip{animation:none}.${p}-bar{transform:none}}`,
+};
+
+// ---- LAM: mini arena, gate beam, display
+const track = 'M16 96C56 96 64 60 112 60S184 30 224 30';
+V['lam'] = {
+  svg: `<path d="${track}" style="fill:none;stroke:var(--ink);stroke-width:7;opacity:.85"/>
+<rect class="${T('post')}" x="117" y="38" width="6" height="12"/><rect class="${T('post')}" x="117" y="70" width="6" height="12"/>
+<path class="${T('beam')}" d="M120 50V70"/>
+<text class="${T('m')} ${T('mid')}" x="120" y="106">IR gate</text>
+<rect class="${T('bx')}" x="146" y="2" width="90" height="22" rx="3"/>
+<text class="${T('m')} ${T('mid')} ${T('disp')}" x="191" y="18">GATE 1</text>
+<g class="${T('bot')}"><rect class="${T('a')}" x="-9" y="-5" width="18" height="10" rx="2"/>${[[-8, -8], [4, -8], [-8, 5], [4, 5]].map(([x, y]) => `<rect class="${T('wh')}" x="${x}" y="${y}" width="5" height="3"/>`).join('')}<rect class="${T('w')}" x="3" y="-2" width="4" height="4"/></g>`,
+  css: `.${p}-post{fill:var(--ink)}.${p}-wh{fill:var(--ink)}
+.${p}-beam{fill:none;stroke:var(--c-accent2);stroke-width:2;stroke-dasharray:3 3;opacity:.35;animation:${p}-b 7s infinite}
+.${p}-disp{animation:${p}-t 7s infinite}
+.${p}-bot{offset-path:path('${track}');offset-rotate:auto;animation:${p}-r 7s linear infinite}
+@keyframes ${p}-r{0%{offset-distance:0%}80%,100%{offset-distance:100%}}
+@keyframes ${p}-b{0%,38%{opacity:.35}45%,55%{opacity:1}62%,100%{opacity:.35}}
+@keyframes ${p}-t{0%,38%{fill:var(--muted)}45%,55%{fill:var(--c-accent2)}62%,100%{fill:var(--muted)}}
+@media (prefers-reduced-motion:reduce){.${p}-bot{animation:none;offset-distance:45%}.${p}-beam{animation:none;opacity:1}.${p}-disp{animation:none;fill:var(--c-accent2)}}`,
+};
+
+// ---- BidBrain: three works with letters, one proven absence
+V['bidbrain'] = {
+  svg: `<rect class="${T('fl')}" x="4" y="36" width="46" height="32" rx="4"/><text class="${T('b')} ${T('mid')}" x="27" y="56">client</text>
+${[0, 1, 2, 3].map((i) => { const y = 16 + i * 26; const miss = i === 3; return `<path class="${T('ln')}" d="M50 52C58 52 56 ${y} 64 ${y}"/>
+<rect class="${T('bx')}" x="64" y="${y - 10}" width="52" height="20" rx="3"/><text class="${T('m')} ${T('mid')}" x="90" y="${y + 4}">work ${i + 1}</text>
+<path class="${miss ? T('miss') : T('ln')}" d="M116 ${y}H130"/>
+<rect class="${miss ? T('none') : T('bx')}" x="130" y="${y - 10}" width="100" height="20" rx="3"/><text class="${T('m')} ${T('mid')} ${miss ? T('o') + ' ' + T('mt') : ''}" x="180" y="${y + 4}">${miss ? 'none: proven' : 'letter'}</text>`; }).join('')}`,
+  css: `.${p}-miss{fill:none;stroke:var(--c-accent2);stroke-width:2;stroke-dasharray:4 4}
+.${p}-none{fill:#fff;stroke:var(--c-accent2);stroke-width:2;stroke-dasharray:4 3;animation:${p}-k 2.4s infinite}
+.${p}-mt{animation:${p}-k 2.4s infinite}
+@keyframes ${p}-k{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.${p}-none,.${p}-mt{animation:none}}`,
+};
+
+// ---- FlashLOB: roadmap, now marker, status
+V['flashlob'] = {
+  svg: `<path d="M24 50H216" style="fill:none;stroke:var(--line);stroke-width:3"/>
+${[24, 72, 120, 168, 216].map((x, i) => `<circle class="${i === 0 ? T('now') : T('dot')}" cx="${x}" cy="50" r="7"/><text class="${T('m')} ${T('mid')}" x="${x}" y="78">${['−1', '0', '1', '2', 'base'][i]}</text>`).join('')}
+<circle class="${T('pulse')}" cx="24" cy="50" r="7"/>
+<text class="${T('b')} ${T('o')} ${T('mid')}" x="24" y="30">now</text>
+<text class="${T('m')}" x="4" y="104">code done · runs pending</text>`,
+  css: `.${p}-dot{fill:#fff;stroke:var(--muted);stroke-width:2}.${p}-now{fill:var(--c-accent2);stroke:var(--ink);stroke-width:2}
+.${p}-pulse{fill:none;stroke:var(--c-accent2);stroke-width:2;animation:${p}-p 1.8s ease-out infinite}
+@keyframes ${p}-p{0%{r:7;opacity:1}100%{r:17;opacity:0}}
+@media (prefers-reduced-motion:reduce){.${p}-pulse{animation:none;opacity:.4;r:12}}`,
+};
+
+// ---- Flow: five pi bars
+const pi = ['arousal', 'tactical', 'overload', 'flow', 'apathy'];
+const fin = [0.25, 0.2, 0.12, 0.95, 0.1];
+V['flow-game'] = {
+  svg: `<path d="M4 78H236" style="fill:none;stroke:var(--line);stroke-width:1.5"/>
+${pi.map((n, i) => { const x = 24 + i * 48; return `<rect class="${T('bar')} ${T(i === 3 ? 'a' : 'lt')} ${T('b' + i)}" x="${x - 14}" y="14" width="28" height="64"/><text class="${T('b')} ${T('mid')}" x="${x}" y="${i % 2 ? 108 : 94}">${n}</text>`; }).join('')}`,
+  css: `.${p}-bar{transform-box:fill-box;transform-origin:bottom;animation:${p}-s 10s ease-in-out infinite}
+.${p}-lt{fill:color-mix(in srgb,var(--c-accent) 40%,white);stroke:var(--c-accent);stroke-width:1.5}
+${fin.map((_, i) => `.${p}-b${i}{animation-delay:${-i * 2}s;animation-duration:${9 + i}s}`).join('')}
+@keyframes ${p}-s{0%,100%{transform:scaleY(.15)}25%{transform:scaleY(.85)}50%{transform:scaleY(.25)}75%{transform:scaleY(.55)}}
+@media (prefers-reduced-motion:reduce){.${p}-bar{animation:none}${fin.map((v, i) => `.${p}-b${i}{transform:scaleY(${v})}`).join('')}}`,
+};
+
+// ---- NeuralDebris: feature bar fills, a detection drops into keep or drop
+V['neural-debris'] = {
+  svg: `${[0, 1, 2, 3, 4].map((i) => `<rect class="${T('seg')} ${T('s' + i)} ${T(i === 4 ? 'o' : 'a')}" x="${4 + i * 46}" y="8" width="${i === 4 ? 18 : 44}" height="16"/>`).join('')}
+<rect x="4" y="8" width="232" height="16" style="fill:none;stroke:var(--ink);stroke-width:1.5"/>
+<text class="${T('m')}" x="4" y="42">1,039 features</text>
+<rect class="${T('bx')}" x="14" y="72" width="96" height="30" rx="3"/><text class="${T('b')} ${T('mid')}" x="62" y="92">keep</text>
+<rect class="${T('bx')}" x="130" y="72" width="96" height="30" rx="3" style="stroke:var(--c-accent2)"/><text class="${T('b')} ${T('mid')} ${T('o')}" x="178" y="92">drop</text>
+<circle class="${T('dk')} ${T('a')}" cx="120" cy="50" r="5"/><circle class="${T('dd')} ${T('o')}" cx="120" cy="50" r="5"/>`,
+  css: `.${p}-seg{opacity:.15;animation:${p}-f 8s infinite}
+${[0, 1, 2, 3, 4].map((i) => `.${p}-s${i}{animation-delay:${i * 0.35}s}`).join('')}
+.${p}-dk{opacity:0;animation:${p}-k 8s infinite}.${p}-dd{opacity:0;animation:${p}-d 8s infinite}
+@keyframes ${p}-f{0%{opacity:.15}12%,92%{opacity:1}100%{opacity:.15}}
+@keyframes ${p}-k{0%,38%{opacity:0;transform:none}42%{opacity:1}58%{opacity:1;transform:translate(-58px,34px)}62%,100%{opacity:0;transform:translate(-58px,34px)}}
+@keyframes ${p}-d{0%,68%{opacity:0;transform:none}72%{opacity:1}88%{opacity:1;transform:translate(58px,34px)}92%,100%{opacity:0;transform:translate(58px,34px)}}
+@media (prefers-reduced-motion:reduce){.${p}-seg{animation:none;opacity:1}.${p}-dk,.${p}-dd{animation:none;opacity:0}}`,
+};
+
+// ---- BDH: evidence chunks to hybrid score to verdict
+V['bdh-narrative'] = {
+  svg: `${[0, 1, 2].map((i) => { const y = 10 + i * 34; return `<rect class="${T('bx')} ${T('c' + i)}" x="4" y="${y}" width="58" height="22" rx="3"/><text class="${T('m')} ${T('mid')}" x="33" y="${y + 15}">chunk ${i + 1}</text><path class="${T('ln')}" d="M62 ${y + 11}C68 ${y + 11} 66 55 72 55"/>`; }).join('')}
+<rect class="${T('fl')}" x="72" y="36" width="90" height="38" rx="4"/>
+<text class="${T('m')} ${T('mid')}" x="117" y="51">0.6 BM25</text><text class="${T('m')} ${T('mid')}" x="117" y="68">+ 0.4 dense</text>
+<path class="${T('ln')}" d="M162 55H168"/>
+<rect class="${T('verdict')} ${T('a')}" x="168" y="40" width="70" height="30" rx="4"/><text class="${T('b')} ${T('mid')} ${T('w')}" x="203" y="59">consistent</text>`,
+  css: `.${p}-c0,.${p}-c1,.${p}-c2{animation:${p}-c 9s infinite}.${p}-c1{animation-delay:.5s}.${p}-c2{animation-delay:1s}
+.${p}-verdict{animation:${p}-v 9s infinite}
+@keyframes ${p}-c{0%,5%{fill:#fff}15%,80%{fill:var(--c-tint)}100%{fill:#fff}}
+@keyframes ${p}-v{0%,40%{opacity:.25}50%,90%{opacity:1}100%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.${p}-c0,.${p}-c1,.${p}-c2{animation:none;fill:var(--c-tint)}.${p}-verdict{animation:none}}`,
+};
+const v = V[id];
+---
+{v && (
+  <>
+    <svg class={`tz ${p}-svg`} viewBox="0 0 240 122" aria-hidden="true" focusable="false" set:html={v.svg} />
+    <style is:inline set:html={base(p) + v.css}></style>
+  </>
+)}
+<style>
+  .tz { display: block; width: 100%; height: auto; text-transform: none; letter-spacing: 0; font-size: 12px; }
+</style>

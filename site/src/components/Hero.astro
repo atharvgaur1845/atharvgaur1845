@@ -1,0 +1,27 @@
+---
+import LabBoard from './LabBoard.astro';
+import { getSite } from '../lib/data';
+const site = await getSite();
+const links = site.contacts;
+---
+<section id="hero" class="hero wrap" aria-labelledby="h-name">
+  <div class="intro" data-avoid-path>
+    <h1 id="h-name">Hi, I'm {site.name}.</h1>
+    <p>I study Electrical and Electronics Engineering at BITS Pilani, Goa.</p>
+    <p>I train models, then check whether the evaluation that says they work deserves to be believed. This year that meant a NeurIPS workshop paper on trivial baselines for satellite self-supervised learning, and a 96 MB activity-recognition system that took a poster to the CUHK-X Grand Finals in Shanghai.</p>
+    <ul class="links pixel" aria-label="Profiles">
+      {links.map((c) => <li><a href={c.url} rel="me noopener">{c.label.toLowerCase()}</a></li>)}
+    </ul>
+  </div>
+  <LabBoard />
+</section>
+<style>
+  .hero { display: grid; grid-template-columns: 1fr; gap: 32px; margin-top: 48px; align-items: start; }
+  h1 { font: 700 var(--fs-hero)/var(--lh-hero) var(--font-body); text-wrap: balance; letter-spacing: -.01em; margin-bottom: 16px; }
+  .intro p { max-width: var(--measure); margin-bottom: 12px; }
+  .links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 20px; font-size: 12px; }
+  .links a { display: inline-flex; align-items: center; min-height: 44px; }
+  @media (min-width: 1024px) {
+    .hero { grid-template-columns: 7fr 5fr; gap: 48px; margin-top: 76px; }
+  }
+</style>

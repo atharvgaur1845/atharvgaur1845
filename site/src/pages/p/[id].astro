@@ -1,0 +1,9 @@
+---
+import Home from '../../components/Home.astro';
+import { getEntries } from '../../lib/data';
+export async function getStaticPaths() {
+  return (await getEntries()).filter((e) => e.data.kind !== 'oss').map((e) => ({ params: { id: e.data.id } }));
+}
+const { id } = Astro.params;
+---
+<Home openId={id} />

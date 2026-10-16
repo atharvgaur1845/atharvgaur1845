@@ -1,0 +1,53 @@
+---
+import { getSite } from '../lib/data';
+const site = await getSite();
+const items = site.sections.filter((s) => s.enabled);
+const notesEnabled = false; // notes link appears once a field note is published
+---
+<header class="nav">
+  <div class="nav-in wrap">
+    <div class="left">
+      <a class="mark pixel" href="/">{site.wordmark}</a>
+      <button class="btn probe-btn" type="button" data-probe-toggle aria-pressed="true">
+        <svg width="16" height="20" viewBox="0 0 16 20" shape-rendering="crispEdges" aria-hidden="true">
+          <path fill="#FAF5EF" stroke="#3E3532" stroke-width="1" d="M4.5 1.5h7v3h2v9h-2v3h-7v-3h-2v-9h2z"/>
+          <path fill="#1A1414" d="M5 7h2v2H5zM9 7h2v2H9z"/><path fill="var(--cheek)" d="M4 10h2v1H4zM10 10h2v1h-2z"/>
+        </svg>
+        <span data-probe-label>Probe: on</span>
+      </button>
+    </div>
+    <button class="btn menu-btn" type="button" data-menu-btn aria-expanded="false" aria-controls="nav-links">menu</button>
+    <nav id="nav-links" class="links" aria-label="Sections">
+      <ul>
+        {items.map((s) => (
+          <li><a href={`/#${s.id}`} data-spy={s.id} class="pixel"><span class="led" aria-hidden="true"></span>{s.label}</a></li>
+        ))}
+        {notesEnabled && <li><a href="/#notes" class="pixel">notes</a></li>}
+      </ul>
+    </nav>
+  </div>
+</header>
+<style>
+  .nav { position: sticky; top: 0; z-index: 50; background: var(--surface); border-bottom: var(--bw) solid var(--ink); }
+  .nav-in { min-height: var(--nav-h); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .left, .right { display: flex; align-items: center; gap: 12px; }
+  .mark { font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
+  .btn { min-height: 44px; }
+  .probe-btn { box-shadow: none; border-width: 1px; }
+  .menu-btn { display: none; }
+  .links ul { display: flex; gap: 4px; }
+  .links a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; font-size: 12px; color: var(--muted); text-decoration: none; }
+  .links a:hover { color: var(--ink); text-decoration: underline; }
+  .links a .led { visibility: hidden; }
+  .links a[data-current] { color: var(--ink); }
+  .links a[data-current] .led { visibility: visible; }
+  @media (max-width: 1099px) { .links a { padding: 0 6px; } }
+  @media (max-width: 899px) {
+    .nav-in { flex-wrap: wrap; }
+    .menu-btn { display: inline-flex; margin-left: auto; }
+    .right { order: 2; }
+    .links { display: none; order: 5; width: 100%; padding-bottom: 8px; }
+    .links[data-open] { display: block; }
+    .links ul { flex-direction: column; }
+  }
+</style>

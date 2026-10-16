@@ -1,0 +1,30 @@
+---
+import Tile from './Tile.astro';
+import { getEntries, SHELF_LABEL, kindVar, type ShelfId } from '../lib/data';
+interface Props { id: ShelfId }
+const { id } = Astro.props;
+const entries = (await getEntries()).filter((e) => e.data.shelf === id);
+const kind = entries[0]?.data.kind ?? 'research';
+const cols = { S: 3, M: 4, L: 6 } as const;
+const rows: (typeof entries)[] = [];
+let used = 0;
+for (const e of entries) {
+  const c = cols[e.data.span];
+  if (!rows.length || used + c > 12) { rows.push([]); used = 0; }
+  rows[rows.length - 1].push(e); used += c;
+}
+---
+{entries.length > 0 && (
+  <section id={id} data-shelf={id} class="shelf wrap section" aria-labelledby={`h-${id}`}>
+    <h2 id={`h-${id}`} class="pixel" data-avoid-text><span class="sq" style={`background:${kindVar(kind)}`} aria-hidden="true"></span>{SHELF_LABEL[id]}</h2>
+    {rows.map((row) => (
+      <div class="row" data-shelf-row>{row.map((e) => <Tile entry={e} />)}</div>
+    ))}
+  </section>
+)}
+<style>
+  h2 { display: flex; align-items: center; gap: 8px; font: 600 var(--fs-shelf)/var(--lh-shelf) var(--font-pixel); letter-spacing: .06em; margin-bottom: 16px; }
+  .sq { width: 6px; height: 6px; border: 1px solid var(--ink); display: inline-block; }
+  .row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; align-items: end; padding-bottom: 20px; margin-bottom: 28px; border-bottom: var(--bw-shelf) solid var(--ink); }
+  @media (max-width: 719px) { .row { gap: 20px; } }
+</style>

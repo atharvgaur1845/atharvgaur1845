@@ -1,0 +1,5 @@
+---
+import { getProbeData } from '../lib/data';
+const data = await getProbeData();
+---
+<script type="application/json" id="probe-data" set:html={JSON.stringify(data).replace(/</g, '\\u003c')} />

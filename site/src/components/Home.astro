@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from './Nav.astro';
+import Hero from './Hero.astro';
+import Shelf from './Shelf.astro';
+import SkillsIndex from './SkillsIndex.astro';
+import Contact from './Contact.astro';
+import Footer from './Footer.astro';
+import ProbeData from './ProbeData.astro';
+import Companion from '../islands/Companion';
+import PanelHost from '../islands/PanelHost';
+import Panel from './Panel.astro';
+import LockedDialog from './LockedDialog.astro';
+import { getSite, getEntries, type ShelfId } from '../lib/data';
+interface Props { openId?: string }
+const { openId } = Astro.props;
+const site = await getSite();
+const enabled = site.sections.filter((s) => s.enabled).map((s) => s.id);
+const panelEntries = (await getEntries()).filter((e) => e.data.status !== 'confidential' && e.data.kind !== 'oss');
+const open = openId ? (await getEntries()).find((e) => e.data.id === openId) : undefined;
+const locked = open?.data.status === 'confidential';
+---
+<Base title={open ? `${open.data.title} | Atharv Sharma` : 'Atharv Sharma'} description={open ? (open.data.finding ?? open.data.lab) : undefined} image={open ? `/og/${open.data.id}.png` : '/og/home.png'}>
+  <Nav />
+  <main id="main">
+    {enabled.map((id) => {
+      if (id === 'hero') return <Hero />;
+      if (id === 'skills') return <SkillsIndex />;
+      if (id === 'contact') return <Contact />;
+      return <Shelf id={id as ShelfId} />;
+    })}
+  </main>
+  <Footer />
+  {panelEntries.map((p) => <Panel entry={p} open={openId === p.data.id} />)}
+  <LockedDialog openId={locked ? openId : undefined} name={open?.data.title} q={open?.data.lab} />
+  <ProbeData />
+  <Companion client:idle />
+  <PanelHost client:idle />
+</Base>

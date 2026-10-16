@@ -1,0 +1,7 @@
+firstVisit: "Hi, I'm Probe. Point at anything on a shelf."
+off: "Umm, I'm going..."
+on: "Yippee, I'm back!"
+orb: "Too much compute!"
+konami: "You found the cabinet code."
+hint: "Point at a card on a shelf and I'll tell you why it is there."
+panelHint: "Not sure where to look? Start at the top of the panel."

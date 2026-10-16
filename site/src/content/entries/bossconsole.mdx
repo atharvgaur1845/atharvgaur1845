@@ -1,0 +1,30 @@
+---
+id: bossconsole
+kind: oss
+status: published
+shelf: oss
+span: L
+order: 1
+year: "2026"
+venue: "risa-labs-inc"
+title: "BossConsole"
+chips: ["OPEN SOURCE", "15 MERGED"]
+finding: "Credential handling at the MCP boundary, path and ID escape fixes, plugin permission fixes and test hardening for an open-source agent console."
+outcome: "15 merged PRs, Sep 2026"
+evidence:
+  - { claim: "15 merged PRs", ref: "OSS.bossconsole-gh" }
+oss:
+  eyebrow: "risa-labs-inc / BossConsole · Kotlin"
+  right: "15 merged · Sep to Oct 2026"
+  href: "https://github.com/risa-labs-inc/BossConsole"
+  base: "https://github.com/risa-labs-inc/BossConsole/pull/"
+  groups:
+    - { name: "Secret handling", prs: [822, 877, 1656, 1733] }
+    - { name: "Access boundaries", prs: [880, 1744] }
+    - { name: "Workspace reliability", prs: [976, 1712, 1713, 1746] }
+    - { name: "Test hardening", prs: [984, 1019, 1020, 1021, 1747] }
+palette: { bg: "#EEF0FF", tint: "#E0E4FF", accent: "#3A46C8", accent2: "#0D7558" }
+robot:
+  dwell: "15 merged PRs in September 2026, from MCP secret handling to path-escape fixes. Want the themes?"
+  click: "Four themes: secret handling, access boundaries, workspace reliability, test hardening. Open it for the list."
+---

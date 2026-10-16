@@ -1,0 +1,27 @@
+---
+interface Props { openId?: string; name?: string; q?: string }
+const { openId, name = '', q = '' } = Astro.props;
+const LOCK = '<path d="M5 2h6v1h1v4h-1V3H5v4H4V3h1z" fill="#172036"/><rect x="3" y="7" width="10" height="8" fill="#172036"/><rect x="4" y="8" width="8" height="6" fill="#E6E6EC"/><rect x="7" y="9" width="2" height="2" fill="#F2A0B2"/><rect x="7.5" y="11" width="1" height="2" fill="#F2A0B2"/>';
+---
+<dialog id="lk-dialog" aria-labelledby="lk-title" open={!!openId} data-open-id={openId}>
+  <a class="lk-x" href="/" aria-label="Close" id="lk-close">×</a>
+  <svg viewBox="0 0 16 16" width="64" height="64" shape-rendering="crispEdges" aria-hidden="true" set:html={LOCK} />
+  <p class="lk-name" id="lk-name">{name}</p>
+  <h3 id="lk-title" tabindex="-1">Oops!! It's confidential.</h3>
+  <p>It'll be available once it's published.</p>
+  <p class="lk-q" id="lk-q">{q}</p>
+</dialog>
+<style is:global>
+  #lk-dialog { width: min(480px, calc(100vw - 32px)); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 6px 6px 0 var(--shadow); padding: 28px 28px 24px; text-align: center; background: rgba(255, 255, 255, .94); color: var(--ink); }
+  #lk-dialog[open]:not(:modal) { position: fixed; inset: 0; margin: auto; height: fit-content; z-index: 80; }
+  #lk-dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(3px); }
+  #lk-dialog[open] { animation: lk-pop .22s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes lk-pop { from { transform: scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+  #lk-dialog svg { image-rendering: pixelated; }
+  #lk-dialog h3 { margin: 6px 0 4px; font: 700 24px/1.2 var(--font-body); outline: none; }
+  #lk-dialog p { margin: 0; }
+  #lk-dialog .lk-name { font: 600 11px var(--font-mono); letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-top: 6px; }
+  #lk-dialog .lk-q { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  #lk-dialog .lk-x { position: absolute; top: 4px; right: 4px; width: 44px; height: 44px; display: grid; place-items: center; font: 400 24px var(--font-body); color: var(--ink); text-decoration: none; }
+  @media (prefers-reduced-motion: reduce) { #lk-dialog[open] { animation: none; } }
+</style>

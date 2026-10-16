@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import ProbeData from '../components/ProbeData.astro';
+import Companion from '../islands/Companion';
+---
+<Base title="Page not found | Atharv Sharma" noindex>
+  <Nav />
+  <main id="main" class="wrap lost" data-probe-wave>
+    <section class="lost-card" data-probe-board aria-labelledby="h-lost">
+      <p class="code pixel" aria-hidden="true">404</p>
+      <h1 id="h-lost" class="pixel">This page is not on any shelf.</h1>
+      <p>The link may be old, or the page may never have existed. The shelves are on the home page.</p>
+      <p><a class="btn" href="/">Back to the lab</a></p>
+    </section>
+  </main>
+  <Footer />
+  <ProbeData />
+  <Companion client:idle />
+</Base>
+<style>
+  .lost { min-height: 52vh; display: grid; place-items: center; padding-top: 96px; }
+  .lost-card { background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-tile); box-shadow: var(--sh-tile); padding: 28px; max-width: 520px; width: 100%; display: grid; gap: 14px; }
+  .code { font-size: 64px; line-height: 1; color: var(--accent); }
+  h1 { font-size: 22px; line-height: 1.25; font-weight: 600; }
+</style>

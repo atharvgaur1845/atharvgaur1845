@@ -1,0 +1,3 @@
+- { id: postman, org: "POSTMAN API Lab, BITS", period: "2025 to May 2025", order: 1 }
+- { id: criss, org: "CRISS Robotics", role: "software subsystem", period: "Apr 2025 to Nov 2025", order: 2 }
+- { id: ieee, org: "IEEE BITS", role: "embedded systems", period: "Sep 2024 to Aug 2025", order: 3 }
