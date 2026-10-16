@@ -27,7 +27,7 @@ export const SW = 16, SH = 20;
 export const OX = 3, OY = 4, W = 22, H = 26;
 
 export const COLOURS: Record<string, string> = {
-  o: '#3E3532', w: '#FAF5EF', s: '#E5D6CA', k: '#1A1414', m: '#3E3532', H: '#FFFFFF', z: '#9B8CFF', x: '#FFFFFF',
+  o: '#3E3532', w: '#FAF5EF', s: '#E5D6CA', k: '#1A1414', m: '#3E3532', H: '#FFFFFF', z: '#9B8CFF', x: '#FFFFFF', u: '#CFC4B8',
 };
 export const ORB = ['#7BD8F5', '#9B8CFF', '#F59BD6', '#8CF2C4'] as const;
 export const ORB_MS = 170;
@@ -43,6 +43,7 @@ export interface Pose {
   wave?: 0 | 1 | 2;
   z?: number;            // 0..3 rising z phase, undefined = none
   sparkle?: boolean;
+  dust?: 1 | 2 | 3;      // landing dust puff (2 to 3 pixels each side of the feet)
 }
 
 export const FRAMES = {
@@ -150,6 +151,11 @@ export function buildGrid(p: Pose = {}): string[][] {
       const y = zy + r - 2, x = zx + c;
       if (y >= 0 && y < H && x < W) out[Math.max(0, y)][x] = 'z';
     });
+  }
+  if (p.dust) {
+    const by = bottom - 1, l = OX + 3, r = OX + 12;
+    const spots: [number, number][] = p.dust === 1 ? [[by, l - 1], [by, r + 1]] : p.dust === 2 ? [[by, l - 2], [by - 1, l - 3], [by, r + 2], [by - 1, r + 3]] : [[by - 1, l - 4], [by - 2, l - 3], [by - 1, r + 4], [by - 2, r + 3]];
+    spots.forEach(([y, x]) => { if (y >= 0 && x >= 0 && x < W) out[y][x] = 'u'; });
   }
   if (p.sparkle) {
     const spots: [number, number][] = [[1, 1], [2, 17], [8, 0], [9, 18], [16, 1], [15, 18]];

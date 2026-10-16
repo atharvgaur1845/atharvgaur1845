@@ -1,19 +1,17 @@
 // Probe state machine (spec 10.2). Pure logic: the host performs movement and drawing.
-import { MAX_AUTO, type Globals, type Kind, type LineMap, type Session, type Taps } from './lines';
+import { type Globals, type Kind, type LineMap, type Session, type Taps } from './lines';
 
 export type State =
-  | 'hidden' | 'entering' | 'idle' | 'noticing' | 'walking' | 'talking' | 'cooldown'
+  | 'hidden' | 'entering' | 'idle' | 'talking' | 'cooldown'
   | 'inspecting' | 'dozing' | 'perched' | 'leaving' | 'overcharge' | 'dancing';
 
 export const T = {
-  DWELL: 600, NOTICE: 300, TALK: 5000, COOLDOWN: 8000, INSPECT_AFTER: 20000, INSPECT: 2000,
+  DWELL: 450, TALK: 5000, COOLDOWN: 3000, INSPECT_AFTER: 20000, INSPECT: 2000,
   DOZE_AFTER: 60000, ENTER: 700, LEAVE: 1900, OVERCHARGE: 1200, DANCE: 3000, ORB_CLICKS: 5, ORB_WINDOW: 3000,
   SPEAK_RETRY: 200, MANUAL: 4500,
 } as const;
 
 export interface Host {
-  /** Move beside the tile. done(true) once Probe stands at its spot, done(false) if it has to stay put. */
-  walkToTile(id: string, done: (moved: boolean) => void): void;
   /** Show (text) or hide (null) the bubble. */
   say(text: string | null, kind: Kind | null): void;
   perch(): void;
@@ -111,51 +109,34 @@ export class Machine {
     const prev = this.hover;
     this.hover = id;
     if (!this.active) return;
-    if (id === null || id !== prev) this.clear('dwell');
-    if (id === null && this.state === 'talking' && this.autoTalk && prev === this.target) this.endTalk();
+    if (id !== prev) this.clear('dwell');
+    if (this.state === 'talking' && this.autoTalk && id !== this.target) this.endTalk();
     if (id !== null) this.maybeDwell();
   }
 
   private autoTalk = false;
 
   private eligible(id: string | null): id is string {
-    return !!id && !!this.o.lines[id] && !this.o.session.has(id) && !this.o.session.capped;
+    return !!id && !!this.o.lines[id] && !this.o.session.has(id);
   }
 
+  /** ~450 ms on a tile explains it automatically (no click). Never during the cooldown. */
   private maybeDwell() {
     if (this.state !== 'idle' || !this.eligible(this.hover) || this.target === this.hover) return;
     const id = this.hover;
-    this.set('dwell', T.DWELL, () => {
-      if (this.state !== 'idle' || this.hover !== id) return;
-      this.target = id;
-      this.go('noticing');
-      this.set('notice', T.NOTICE, () => this.startWalk(id));
-    });
+    this.set('dwell', T.DWELL, () => { if (this.state === 'idle' && this.hover === id) this.speakTile(id); });
   }
 
-  private startWalk(id: string) {
-    if (this.state !== 'noticing') return;
-    if (this.hover !== id) return this.abort();
-    this.go('walking');
-    this.host.walkToTile(id, () => this.arrive(id));
-  }
-
-  private abort() {
-    this.target = null;
-    this.go('idle');
-    this.maybeDwell();
-  }
-
-  private arrive(id: string, tries = 0) {
-    if (this.state !== 'walking') return;
-    if (this.hover !== id) return this.abort(); // retarget only after arrival
+  private speakTile(id: string, tries = 0) {
+    if (this.state !== 'idle' || this.hover !== id) return;
     if (!this.host.canSpeak()) {
-      if (tries > 15) return this.abort();
-      this.set('speak-retry', T.SPEAK_RETRY, () => this.arrive(id, tries + 1));
+      if (tries > 15) return;
+      this.set('speak-retry', T.SPEAK_RETRY, () => this.speakTile(id, tries + 1));
       return;
     }
     const l = this.o.lines[id];
     this.o.session.recordAuto(id);
+    this.target = id;
     this.focus = id;
     this.autoTalk = true;
     this.go('talking');
@@ -257,5 +238,4 @@ export class Machine {
     this.host.unperch(() => { if (this.state === 'perched') { this.go('idle'); this.armIdle(); this.maybeDwell(); } });
   }
 
-  get autoCount() { return Math.min(MAX_AUTO, this.o.session.count); }
 }
