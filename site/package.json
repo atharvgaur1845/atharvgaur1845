@@ -11,7 +11,7 @@
     "typecheck": "astro check",
     "check": "tsx scripts/check-content.ts && astro check",
     "test": "vitest run",
-    "test:e2e": "node tests/e2e/panel.e2e.mjs && node tests/e2e/tiles.e2e.mjs"
+    "test:e2e": "node tests/e2e/panel.e2e.mjs && node tests/e2e/tiles.e2e.mjs && node tests/e2e/reopen.e2e.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

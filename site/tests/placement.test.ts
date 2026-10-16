@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { chooseAnchor, coarseAnchor, candidates, pathBlocked, placeBubble, type Layout, type Rect } from '../src/companion/placement';
 import { KonamiDetector } from '../src/companion/input';
-import { Session, Taps, mix, MAX_AUTO } from '../src/companion/lines';
+import { Session, Taps, mix, REPEAT_MS } from '../src/companion/lines';
 import { MAP, buildGrid, FRAMES, W, H } from '../src/companion/sprite';
 
 const R = (x: number, y: number, w: number, h: number): Rect => ({ x, y, w, h });
@@ -73,10 +73,12 @@ describe('placement', () => {
 });
 
 describe('support', () => {
-  it('session caps and remembers, with a storage that throws', () => {
+  it('session remembers explained tiles for 60 s, with a storage that throws', () => {
     const s = new Session({ getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); } });
-    for (let i = 0; i < MAX_AUTO; i++) s.recordAuto(`t${i}`);
-    expect(s.capped).toBe(true); expect(s.has('t2')).toBe(true);
+    s.recordAuto('t1', 1000);
+    expect(s.has('t1', 1000 + REPEAT_MS - 1)).toBe(true);
+    expect(s.has('t1', 1000 + REPEAT_MS)).toBe(false);
+    expect(s.has('t2', 1000)).toBe(false);
   });
   it('taps alternate', () => {
     const t = new Taps(); const l = { kind: 'oss', locked: false, dwell: 'a', click: 'b' } as const;

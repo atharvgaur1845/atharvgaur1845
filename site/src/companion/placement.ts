@@ -168,3 +168,14 @@ export function measure(root: ParentNode = document): Layout & ShelfMap {
   const b = root.querySelector('[data-probe-board]');
   return { rows, tiles, avoid, pathBlocks, board: b ? abs(b.getBoundingClientRect()) : undefined, rowsOfShelf };
 }
+
+/** Every piece of content Probe and its bubble must stay off (document coordinates, not inflated). The nav is handled by the viewport inset. */
+export function measureContent(root: ParentNode = document): { key: string; rect: Rect }[] {
+  const out: { key: string; rect: Rect }[] = [];
+  const add = (key: string, el: Element) => { const r = abs(el.getBoundingClientRect()); if (r.w > 0 && r.h > 0) out.push({ key, rect: r }); };
+  root.querySelectorAll('.hero .intro > *, #skills .intro, #skills .group, #contact .grid > *, footer.foot .in > *, [data-content], .p-root[data-open] .p-win, #lk-dialog[open]').forEach((el, i) => add(`c${i}`, el));
+  root.querySelectorAll('[data-probe-board]').forEach((el) => add('board', el));
+  root.querySelectorAll('[data-tile]').forEach((el) => add(`tile:${(el as HTMLElement).dataset.tile}`, el));
+  root.querySelectorAll('main h2').forEach((el, i) => { const r = textRect(el); if (r.w > 0) out.push({ key: `h${i}`, rect: r }); });
+  return out;
+}

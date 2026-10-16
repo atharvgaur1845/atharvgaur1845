@@ -2,10 +2,11 @@
 import { Machine, type Host, type State } from './machine';
 import { KIND_COLOUR, Session, Taps, type Globals, type Kind, type LineMap } from './lines';
 import { KonamiDetector, Quiet, isCoarse, prefersReduced } from './input';
+import { BUBBLE, coarseAnchor, measure, measureContent, type Anchor, type Pt, type Rect } from './placement';
 import {
-  BUBBLE, chooseAnchor, coarseAnchor, measure, placeBubble,
-  type Anchor, type Pt, type Rect,
-} from './placement';
+  DeadZone, SpotIndex, chooseSpot, groundsOf, liftFor, placeFreeBubble, planPath, smoothDamp, boxAt, within,
+  type Content, type Spot, type Step,
+} from './follow';
 import { FRAMES, OX, OY, SH, W, H, draw, isOrbCell, type FrameName, type Pose } from './sprite';
 
 export interface Els { layer: HTMLElement; canvas: HTMLCanvasElement; bubble: HTMLElement; bang: HTMLElement }
@@ -14,6 +15,12 @@ interface Move { kind: 'walk' | 'hop'; from: Pt; to: Pt; start: number; dur: num
 const NAV = 48;
 const WALK_PX_S = 180;
 const HOP_MS = 220;
+const RUN_MAX = 560; // px/s
+type Act =
+  | { k: 'idle' }
+  | { k: 'run'; x: number }
+  | { k: 'hop'; from: Pt; to: Pt; start: number; dur: number; lift: number; gid: string }
+  | { k: 'fade'; to: Spot; start: number; phase: 'out' | 'in' };
 
 export class Controller {
   machine: Machine;
@@ -24,7 +31,6 @@ export class Controller {
   private raf = 0;
   private scale = 3;
   private coarse = false;
-  private pointer: Pt | undefined;
   private hoverTile: string | null = null;
   private tint: string | null = null;
   private quiet = new Quiet();
@@ -39,11 +45,32 @@ export class Controller {
   private destroyed = false;
   private wave = false;
   private fadeTimer: ReturnType<typeof setTimeout> | undefined;
+  // follow-the-cursor locomotion
+  private gid = '';
+  private vx = 0;
+  private act: Act = { k: 'idle' };
+  private queue: Step[] = [];
+  private target: Spot | null = null;
+  private dz = new DeadZone();
+  private ptrClient: Pt | undefined;
+  private needRetarget = true;
+  private index: SpotIndex | null = null;
+  private content: Content[] = [];
+  private runPhase = 0;
+  private running = false;
+  private face = 1;
+  private landedAt = -1e9;
+  private lastFrame = 0;
+  private bubbleIdx = -1;
+  private bubbleShown = false;
+  private want = false;
+  private bw = BUBBLE.w;
+  private bh = 40;
+  private rmTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private els: Els, lines: LineMap, globals: Globals, private onHidden: () => void) {
     const kv = (() => { try { return sessionStorage; } catch { return undefined; } })();
     const host: Host = {
-      walkToTile: (id, done) => this.walkToTile(id, done),
       say: (t, k) => this.say(t, k),
       perch: () => this.perch(),
       unperch: (d) => this.unperch(d),
@@ -67,11 +94,17 @@ export class Controller {
     if (!ctx) return;
     document.documentElement.toggleAttribute('data-probe-pips', this.coarse);
     this.placeHome(true);
+    this.refreshIndex();
+    this.gid = this.resolveGid();
     this.listen();
+    this.cleanup.push(((i) => () => clearInterval(i))(setInterval(() => this.refreshIndex(), 1500)));
+    document.fonts?.ready.then(() => this.refreshIndex());
+    (window as unknown as Record<string, unknown>).__probe = { spotFor: (x: number, y: number) => this.spotFor({ x, y }), content: () => this.content.map((c) => c.rect), sprite: () => this.sprite, dbg: () => ({ pos: this.pos, want: this.want, hidden: this.els.bubble.hidden, tf: this.els.bubble.style.transform, shown: this.bubbleShown, act: this.act.k, st: this.machine.state, sy: scrollY }) };
     this.nextBlink = performance.now() + 2500;
     this.machine.enable(greeting);
     const w = document.querySelector<HTMLElement>('.p-root[data-open] .p-win');
     if (w) { const r = w.getBoundingClientRect(); this.perchRect = { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }; this.machine.panelOpen(); }
+    this.lastFrame = performance.now();
     this.loop(performance.now());
   }
 
@@ -129,12 +162,51 @@ export class Controller {
     this.moveTo(a, () => {});
   }
 
-  // ---- movement
+  // ---- free-space index
+  private sig = '';
+  private static signature(c: { rect: Rect }[]) { return c.map((x) => `${Math.round(x.rect.x)},${Math.round(x.rect.y)},${Math.round(x.rect.w)},${Math.round(x.rect.h)}`).join(';'); }
+
+  /** Layout moved under Probe (lazy reveals, images, fonts): rebuild the free-space map at once, not on the 1.5 s timer. */
+  private checkLayout() {
+    if (this.coarse || this.destroyed) return;
+    if (Controller.signature(measureContent()) !== this.sig) {
+      this.refreshIndex(); this.needRetarget = true; this.dz.reset();
+      this.gid = this.resolveGid();
+    }
+  }
+
+  private refreshIndex() {
+    if (this.destroyed) return;
+    const lay = measure();
+    this.content = measureContent();
+    this.sig = Controller.signature(this.content);
+    this.index = new SpotIndex(groundsOf(lay.rows, lay.tiles, lay.board), this.content, this.sprite);
+  }
+
+  private resolveGid(): string {
+    const g = this.index?.grounds.find((x) => Math.abs(x.y - this.pos.y) < 3 && this.pos.x >= x.x0 - 1 && this.pos.x <= x.x1 + 1);
+    return g?.id ?? '';
+  }
+
+  private pointerDoc(): Pt | undefined {
+    return this.ptrClient ? { x: this.ptrClient.x + scrollX, y: this.ptrClient.y + scrollY } : undefined;
+  }
+
+  /** Test hook: where Probe would stand for a cursor at (x, y) in document coordinates. */
+  private spotFor(p: Pt) {
+    if (!this.index) return null;
+    const s = chooseSpot(this.index, p, this.viewport);
+    return s ? { spot: s, box: boxAt(s.x, s.y, this.sprite) } : null;
+  }
+
+  private get curSpot(): Spot { return { gid: this.gid, x: this.pos.x, y: this.pos.y }; }
+
+  // ---- movement (touch, reduced motion, perch: the older anchor moves)
   private moveTo(a: Anchor, done: () => void) {
     const to = { x: a.x, y: a.y };
     if (prefersReduced()) {
       this.els.canvas.style.opacity = '0';
-      this.after(75, () => { this.pos = to; this.surface = a.surface; this.els.canvas.style.opacity = '1'; this.after(75, done); });
+      this.after(75, () => { this.pos = to; this.surface = a.surface; this.gid = this.resolveGid(); this.els.canvas.style.opacity = '1'; this.after(75, done); });
       return;
     }
     const dx = Math.abs(to.x - this.pos.x);
@@ -143,13 +215,7 @@ export class Controller {
       ? { kind: 'walk', from: { ...this.pos }, to, start: performance.now(), dur: Math.max(60, (dx / WALK_PX_S) * 1000), lift: 0, done }
       : { kind: 'hop', from: { ...this.pos }, to, start: performance.now(), dur: HOP_MS, lift: Math.min(90, 36 + Math.hypot(to.x - this.pos.x, to.y - this.pos.y) * 0.08), done };
     this.surface = a.surface;
-  }
-
-  private walkToTile(id: string, done: (moved: boolean) => void) {
-    const lay = measure();
-    const pick = chooseAnchor(lay, id, { pointer: this.pointer, viewport: this.viewport, sprite: this.sprite, from: this.pos });
-    if (!pick) { done(false); return; }
-    this.moveTo(pick.anchor, () => done(true));
+    this.act = { k: 'idle' }; this.queue = []; this.vx = 0;
   }
 
   private perch() {
@@ -166,66 +232,62 @@ export class Controller {
   private unperch(done: () => void) {
     const s = this.saved;
     this.saved = null;
-    const finish = () => { this.els.layer.classList.remove('perched'); done(); };
+    const finish = () => { this.els.layer.classList.remove('perched'); this.needRetarget = true; this.dz.reset(); done(); };
     if (!s) { finish(); return; }
     this.moveTo({ key: 'back', surface: s.surface, x: s.pos.x, y: s.pos.y, kind: 'park' }, finish);
   }
 
-  // ---- bubble
+  // ---- bubble (free space only: above, left or right of Probe, or not shown)
   private say(text: string | null, kind: Kind | null) {
     const b = this.els.bubble;
     this.tint = text && kind ? KIND_COLOUR[kind] : null;
-    if (!text) { b.hidden = true; return; }
+    this.want = !!text;
+    if (!text) { b.hidden = true; this.bubbleShown = false; return; }
     b.hidden = false;
+    b.style.visibility = 'visible';
     b.textContent = text;
+    this.bw = Math.min(BUBBLE.w, b.offsetWidth || BUBBLE.w); this.bh = b.offsetHeight || 40; // measured once; the box is not re-measured while hidden
     b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    this.bubbleIdx = -1;
+    this.bubbleShown = false;
+    this.needRetarget = true; this.dz.reset(); // stand where the bubble fits in free space
     this.placeBubbleEl();
   }
 
+  /** Re-validated every frame (Probe moving, scrolling, layout change): flip to a free side, or hide at once (display none) until one is free. */
   private placeBubbleEl() {
     const b = this.els.bubble;
-    if (b.hidden) return;
-    const w = Math.min(BUBBLE.w, b.offsetWidth || BUBBLE.w), h = b.offsetHeight || 40;
-    const sp = this.sprite;
-    const v = this.viewport;
-    const bad: Rect[] = [];
-    const others: Rect[] = [];
-    if (this.pointer) bad.push({ x: this.pointer.x - 24, y: this.pointer.y - 24, w: 48, h: 48 });
-    const lay0 = measure();
-    if (lay0.board) bad.push(lay0.board); // never cover the lab board with a bubble
-    if (this.hoverTile) {
-      const lay = measure();
-      lay.tiles.find((t) => t.id === this.hoverTile)?.avoid.forEach((r) => bad.push(r));
-      bad.push(...lay.avoid);
-      others.push(...lay.tiles.filter((t) => t.id !== this.hoverTile).flatMap((t) => t.avoid));
-    }
-    const base = { x: this.pos.x, y: this.pos.y };
-    const bc = { viewport: v, sprite: sp, bubble: { w, h } };
-    let r = placeBubble(base, bc, [...bad, ...others]) ?? placeBubble(base, bc, bad)
-      ?? placeBubble(base, { viewport: v, sprite: sp, bubble: { w, h } }, []);
-    if (this.coarse) {
-      const ideal = base.y - sp.h - 10 - h;
-      const clamped = ideal < v.y + 4;
-      // not enough room above: sit beside Probe (to its left) so neither Probe nor card text is covered
-      const x = clamped ? base.x - sp.w / 2 - 6 - w : base.x - w / 2;
-      r = { x: Math.min(Math.max(x, v.x + 4), v.x + v.w - w - 4), y: Math.max(v.y + 4, ideal), w, h };
-    }
-    if (!r) {
-      const x = Math.min(Math.max(base.x - w / 2, v.x + 4), v.x + v.w - w - 4);
-      r = { x, y: Math.max(v.y + 4, base.y - sp.h - 8 - h), w, h };
-    }
+    if (!this.want) return;
+    const sp = this.sprite, v = this.viewport, base = { x: this.pos.x, y: this.pos.y };
+    if (this.coarse) { b.hidden = false; this.placeBubbleCoarse(b, base, sp, v); return; }
+    if (!b.hidden) { this.bw = Math.min(BUBBLE.w, b.offsetWidth || this.bw); this.bh = b.offsetHeight || this.bh; } // real size (fonts load late)
+    this.content = measureContent();
+    const hit = placeFreeBubble(base, sp, { w: this.bw, h: this.bh }, this.content, this.pointerDoc(), v, this.bubbleIdx);
+    if (!hit) { b.hidden = true; this.bubbleShown = false; return; }
+    if (!this.bubbleShown) { this.bubbleShown = true; b.hidden = false; b.classList.remove('refade'); void b.offsetWidth; b.classList.add('refade'); }
+    b.hidden = false;
+    const r = hit.rect;
+    this.bubbleIdx = hit.idx;
     b.style.transform = `translate(${Math.round(r.x)}px, ${Math.round(r.y)}px)`;
-    const beside = r.y + h > base.y - sp.h + 2 && r.y < base.y && (r.x + w <= base.x - sp.w / 2 || r.x >= base.x + sp.w / 2);
-    const above = r.y + h <= base.y - sp.h + 2;
-    b.dataset.side = beside ? (r.x < base.x ? 'left' : 'right') : above ? 'above' : 'below';
+    b.dataset.side = hit.idx <= 2 ? 'above' : hit.idx === 3 ? 'left' : 'right';
+    b.style.setProperty('--tx', `${Math.round(Math.min(Math.max(base.x - r.x, 10), this.bw - 18))}px`);
+  }
+
+  private placeBubbleCoarse(b: HTMLElement, base: Pt, sp: { w: number; h: number }, v: Rect) {
+    const w = this.bw, h = this.bh;
+    const ideal = base.y - sp.h - 10 - h;
+    const clamped = ideal < v.y + 4;
+    const x = clamped ? base.x - sp.w / 2 - 6 - w : base.x - w / 2;
+    const r = { x: Math.min(Math.max(x, v.x + 4), v.x + v.w - w - 4), y: Math.max(v.y + 4, ideal), w, h };
+    b.style.transform = `translate(${Math.round(r.x)}px, ${Math.round(r.y)}px)`;
+    b.dataset.side = clamped ? 'left' : 'above';
     b.style.setProperty('--tx', `${Math.round(Math.min(Math.max(base.x - r.x, 10), w - 18))}px`);
   }
 
   // ---- state hooks
   private onState(s: State, prev: State) {
-    const { layer, bang } = this.els;
+    const { layer } = this.els;
     layer.dataset.state = s;
-    bang.hidden = s !== 'noticing';
     if (s === 'leaving') layer.classList.add('leaving');
     if (s === 'hidden') { this.onHidden(); }
     if (s === 'entering') this.startHopInPlace();
@@ -237,8 +299,111 @@ export class Controller {
     this.move = { kind: 'hop', from: { ...this.pos }, to: { ...this.pos }, start: performance.now(), dur: 360, lift: 34, done: () => {} };
   }
 
+  // ---- follow the cursor
+  private canFollowX() { return ['idle', 'cooldown', 'talking'].includes(this.machine.state); }
+  private movable() { return !this.coarse && !prefersReduced() && !this.move && !['hidden', 'leaving', 'entering', 'perched', 'dancing', 'overcharge'].includes(this.machine.state); }
+
+  private posValid(v: Rect, ptr: Pt | undefined): boolean {
+    const b = boxAt(this.pos.x, this.pos.y, this.sprite);
+    if (!within(b, v)) return false;
+    if (ptr && b.x < ptr.x + 24 && b.x + b.w > ptr.x - 24 && b.y < ptr.y + 24 && b.y + b.h > ptr.y - 24) return false;
+    return true;
+  }
+
+  private retarget(v: Rect, ptr: Pt | undefined) {
+    if (!this.index) return;
+    const p = ptr ?? { x: this.pos.x, y: v.y + v.h * 0.7 };
+    const bub = this.want ? { w: this.bw, h: this.bh } : undefined;
+    this.target = chooseSpot(this.index, p, v, this.gid ? this.curSpot : undefined, bub);
+    this.queue = [];
+    if (this.act.k === 'run') this.act = { k: 'idle' };
+  }
+
+  private startHop(from: Pt, to: { x: number; y: number }, gid: string, now: number) {
+    const dist = Math.hypot(to.x - from.x, to.y - from.y);
+    this.act = { k: 'hop', from: { ...from }, to: { x: to.x, y: to.y }, start: now, dur: 220 + Math.min(80, dist / 6), lift: liftFor(from, to), gid };
+    this.vx = 0;
+  }
+
+  private stepFollow(now: number, dt: number) {
+    const v = this.viewport;
+    const ptr = this.pointerDoc();
+    const movable = this.movable();
+    if (!movable) { this.vx = 0; return; }
+    const moving = this.canFollowX();
+    const invalid = !this.posValid(v, ptr);
+    if (this.needRetarget || (ptr && this.dz.update(ptr)) || invalid) {
+      if (moving || invalid) { this.retarget(v, ptr); this.needRetarget = false; }
+    }
+    const a = this.act;
+    if (a.k === 'hop') {
+      const t = Math.min(1, (now - a.start) / a.dur);
+      this.pos = { x: a.from.x + (a.to.x - a.from.x) * t, y: a.from.y + (a.to.y - a.from.y) * t - Math.sin(Math.PI * t) * a.lift };
+      if (t >= 1) { this.pos = { ...a.to }; this.gid = a.gid; this.landedAt = now; this.act = { k: 'idle' }; }
+      return;
+    }
+    if (a.k === 'fade') {
+      const el = now - a.start;
+      if (a.phase === 'out' && el >= 110) { this.pos = { x: a.to.x, y: a.to.y }; this.gid = a.to.gid; this.act = { k: 'fade', to: a.to, start: now, phase: 'in' }; this.landedAt = now; }
+      else if (a.phase === 'in' && el >= 110) this.act = { k: 'idle' };
+      this.els.canvas.style.opacity = String(a.phase === 'out' ? 1 - Math.min(1, el / 110) : Math.min(1, el / 110));
+      this.vx = 0;
+      return;
+    }
+    if (a.k === 'run') {
+      const [x, nv] = smoothDamp(this.pos.x, a.x, this.vx, 0.14, RUN_MAX, dt);
+      this.pos.x = x; this.vx = nv;
+      if (Math.abs(x - a.x) < 1 && Math.abs(nv) < 8) { this.pos.x = a.x; this.vx = 0; this.act = { k: 'idle' }; }
+      return;
+    }
+    // idle locomotion: continue the queue, or head for the target
+    if (this.els.canvas.style.opacity !== '1') this.els.canvas.style.opacity = '1';
+    const q = this.queue.shift();
+    if (q) { if (q.type === 'run') this.act = { k: 'run', x: q.x }; else this.startHop(this.pos, q, q.gid, now); return; }
+    const tgt = this.target;
+    if (!tgt || !this.index) { this.vx = 0; return; }
+    if (!moving && !invalid) { this.vx = 0; return; }
+    if (this.gid === tgt.gid && this.index.runnable(tgt.gid, this.pos.x, tgt.x)) {
+      if (Math.abs(tgt.x - this.pos.x) > 0.5 || Math.abs(this.vx) > 8) this.act = { k: 'run', x: tgt.x };
+      return;
+    }
+    if (!this.gid) this.gid = this.resolveGid();
+    const plan = planPath(this.index, this.curSpot, tgt, v);
+    if (plan.teleport) {
+      if (this.pos.x === tgt.x && this.pos.y === tgt.y) return;
+      this.act = { k: 'fade', to: tgt, start: now, phase: 'out' };
+      return;
+    }
+    this.queue = plan.steps.slice(1);
+    const f = plan.steps[0];
+    if (!f) return;
+    if (f.type === 'run') this.act = { k: 'run', x: f.x }; else this.startHop(this.pos, f, f.gid, now);
+  }
+
+  /** Pose from locomotion (run frames tied to speed, take-off stretch, jump, landing squash, dust), or null when standing. */
+  private locoPose(now: number, dt: number): { pose: Pose; key: string; bright?: boolean } | null {
+    const a = this.act;
+    if (a.k === 'hop') {
+      const t = (now - a.start) / a.dur;
+      const fr = t < 0.16 ? FRAMES.hopStretch : t > 0.9 ? FRAMES.hopSquash : FRAMES.hopStretch;
+      return { pose: fr as Pose, key: t < 0.16 ? 'takeoff' : t > 0.9 ? 'land' : 'jump' };
+    }
+    const since = now - this.landedAt;
+    if (since < 90 && this.landedAt > 0) return { pose: FRAMES.hopSquash as Pose, key: 'land' };
+    if (since < 270 && this.landedAt > 0) { const d = (Math.min(2, Math.floor((since - 90) / 60)) + 1) as 1 | 2 | 3; return { pose: { ...(FRAMES.idleA as Pose), dust: d }, key: `dust${d}` }; }
+    const sp = Math.abs(this.vx);
+    if (this.running ? sp < 15 : sp > 40) this.running = !this.running;
+    if (this.running) {
+      if (sp > 1) this.face = Math.sign(this.vx);
+      this.runPhase += (sp * dt) / 26; // one frame flip per ~26 px travelled: legs follow speed
+      const ph = Math.floor(this.runPhase) % 2;
+      return { pose: { feet: ph ? 1 : 2, tilt: this.face > 0 ? 1 : -1 }, key: `run${ph}${this.face}` };
+    }
+    return null;
+  }
+
   // ---- animation loop
-  private poseFor(now: number): { name: FrameName | 'idle'; pose: Pose; key: string } {
+  private poseFor(now: number, dt: number): { name: FrameName | 'idle'; pose: Pose; key: string } {
     const st = this.machine.state;
     const rm = prefersReduced();
     const pick = (n: FrameName) => ({ name: n, pose: FRAMES[n] as Pose, key: n });
@@ -248,6 +413,7 @@ export class Controller {
       const t = (now - m.start) / m.dur;
       return pick(t < 0.15 || t > 0.9 ? 'hopSquash' : 'hopStretch');
     }
+    if (!rm && !this.coarse) { const lp = this.locoPose(now, dt); if (lp) return { name: 'idle', pose: lp.pose, key: lp.key }; }
     if (st === 'dancing') return pick(`dance${Math.floor(now / 150) % 4}` as FrameName);
     if (st === 'overcharge') return pick(Math.floor(now / 120) % 2 ? 'overcharge' : 'idleA');
     if (st === 'dozing') {
@@ -260,8 +426,9 @@ export class Controller {
     if (this.wave && ['idle', 'cooldown'].includes(st)) return pick(rm ? 'wave0' : Math.floor(now / 350) % 2 ? 'wave1' : 'wave0');
     if (now > this.nextBlink) { this.blinkUntil = now + 150; this.nextBlink = now + 3000 + Math.random() * 3500; }
     if (now < this.blinkUntil) return pick('blink');
-    if (!rm && this.pointer && ['idle', 'cooldown', 'talking', 'noticing'].includes(st)) {
-      const dx = this.pointer.x - this.pos.x;
+    const ptr = this.pointerDoc();
+    if (!rm && ptr && ['idle', 'cooldown', 'talking'].includes(st)) {
+      const dx = ptr.x - this.pos.x;
       if (dx > 90) return pick('lookRight');
       if (dx < -90) return pick('lookLeft');
     }
@@ -272,20 +439,25 @@ export class Controller {
   private loop = (now: number) => {
     if (this.destroyed) return;
     this.raf = requestAnimationFrame(this.loop);
+    const dt = Math.min(0.05, Math.max(0.001, (now - this.lastFrame) / 1000));
+    this.lastFrame = now;
     const m = this.move;
     if (m) {
       const t = Math.min(1, (now - m.start) / m.dur);
       this.pos = { x: m.from.x + (m.to.x - m.from.x) * t, y: m.from.y + (m.to.y - m.from.y) * t - (m.kind === 'hop' ? Math.sin(Math.PI * t) * m.lift : 0) };
-      if (t >= 1) { this.pos = { ...m.to }; this.move = null; m.done(); }
-    }
+      if (t >= 1) { this.pos = { ...m.to }; this.move = null; this.gid = this.resolveGid(); m.done(); }
+    } else if (!this.coarse && !prefersReduced()) { this.checkLayout(); this.stepFollow(now, dt); }
     const { canvas } = this.els;
     const s = this.scale;
+    // whole CSS pixels: no sub-pixel shimmer
     canvas.style.transform = `translate(${Math.round(this.pos.x - (OX + 8) * s)}px, ${Math.round(this.pos.y - (OY + SH) * s)}px)`;
-    const bang = this.els.bang;
-    if (!bang.hidden) bang.style.transform = `translate(${Math.round(this.pos.x - 4)}px, ${Math.round(this.pos.y - SH * s - 22)}px)`;
-    if (m) this.placeBubbleEl();
+    // hard rule: the sprite is never seen over content; if a box ever touches it (layout shift, edge case), hide until clear
+    const sb = boxAt(this.pos.x, this.pos.y, this.sprite);
+    const over = !this.perchRect && this.content.some((c) => sb.x < c.rect.x + c.rect.w && sb.x + sb.w > c.rect.x && sb.y < c.rect.y + c.rect.h && sb.y + sb.h > c.rect.y);
+    if (over !== (canvas.style.visibility === 'hidden')) { canvas.style.visibility = over ? 'hidden' : ''; if (over) this.needRetarget = true; }
+    this.placeBubbleEl();
 
-    const p = this.poseFor(now);
+    const p = this.poseFor(now, dt);
     const rm = prefersReduced();
     const orbIdx = rm ? 0 : Math.floor(now / 170) % 4;
     const bright = p.name === 'inspect' || p.name === 'overcharge';
@@ -308,8 +480,9 @@ export class Controller {
     };
     on(document, 'pointermove', (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
-      this.pointer = { x: e.pageX, y: e.pageY };
+      this.ptrClient = { x: e.clientX, y: e.clientY };
       this.machine.input();
+      if (prefersReduced()) this.rmRest();
     });
     on(document, 'pointerover', (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
@@ -318,12 +491,13 @@ export class Controller {
       if (id !== this.hoverTile) { this.hoverTile = id; this.machine.pointerTile(id); }
     });
     on(document.documentElement, 'pointerleave', () => { this.hoverTile = null; this.machine.pointerTile(null); });
-    on(window, 'scroll', () => { this.quiet.scrolled(); this.machine.input(); this.debounce('scroll', 220, () => this.afterScroll()); }, { passive: true });
+    on(window, 'scroll', () => { this.quiet.scrolled(); this.machine.input(); this.needRetarget = true; this.debounce('scroll', 220, () => this.afterScroll()); }, { passive: true });
     on(window, 'resize', () => this.debounce('resize', 200, () => {
       this.scale = this.coarse || innerWidth < 720 ? 2 : 3;
       this.els.canvas.style.width = `${W * this.scale}px`; this.els.canvas.style.height = `${H * this.scale}px`;
-      if (this.machine.state !== 'perched') { this.homeKey = ''; const a = this.homeAnchor(); this.pos = { x: a.x, y: a.y }; this.surface = a.surface; this.homeKey = a.key; }
-      this.placeBubbleEl();
+      this.refreshIndex();
+      if (this.machine.state !== 'perched' && (this.coarse || !this.index?.grounds.some((g) => g.id === this.gid))) { this.homeKey = ''; const a = this.homeAnchor(); this.pos = { x: a.x, y: a.y }; this.surface = a.surface; this.homeKey = a.key; this.gid = this.resolveGid(); }
+      this.needRetarget = true;
     }));
     on(window, 'keydown', (e: KeyboardEvent) => {
       this.machine.input();
@@ -348,8 +522,20 @@ export class Controller {
       this.perchRect = { x: left + scrollX, y: top + scrollY, w: r.width ?? 0, h: r.height ?? 0 };
       this.machine.panelOpen();
     });
-    on(window, 'panel:close', () => this.machine.panelClose());
+    on(window, 'panel:close', () => { this.machine.panelClose(); this.refreshIndex(); });
     if (this.els.layer.dataset.bound !== '1') this.els.layer.dataset.bound = '1';
+  }
+
+  /** Reduced motion: no walking; after the pointer rests, cross-fade to the nearest free spot. */
+  private rmRest() {
+    clearTimeout(this.rmTimer);
+    this.rmTimer = setTimeout(() => {
+      if (this.destroyed || !this.index || !this.canFollowX() || this.move) return;
+      const ptr = this.pointerDoc(); if (!ptr) return;
+      const t = chooseSpot(this.index, ptr, this.viewport, this.gid ? this.curSpot : undefined);
+      if (!t || (t.gid === this.gid && Math.abs(t.x - this.pos.x) < 120)) return;
+      this.moveTo({ key: 'rm', surface: t.gid, x: t.x, y: t.y, kind: 'park' }, () => {});
+    }, 350);
   }
 
   private deb = new Map<string, ReturnType<typeof setTimeout>>();
@@ -363,10 +549,6 @@ export class Controller {
     if (st === 'perched') return;
     if (this.coarse || innerWidth < 720) {
       if (['idle', 'cooldown'].includes(st)) this.placeHome(false);
-    } else if (this.surface === 'corner') {
-      const a = this.fallbackAnchor(); this.pos = { x: a.x, y: a.y };
     }
-    this.placeBubbleEl();
   }
 }
-

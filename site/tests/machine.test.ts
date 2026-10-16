@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Machine, T, type Host, type State } from '../src/companion/machine';
-import { Session, Taps, MAX_AUTO, type Globals, type LineMap } from '../src/companion/lines';
+import { Session, Taps, REPEAT_MS, type Globals, type LineMap } from '../src/companion/lines';
 
 const globals: Globals = { firstVisit: 'hi', off: 'bye', on: 'back', orb: 'orb!', konami: 'cab', hint: 'hint', panelHint: 'phint' };
 const mk = (n: number): LineMap =>
@@ -10,7 +10,6 @@ function setup(n = 10, opts: { canSpeak?: () => boolean; walkDelay?: number; red
   const said: (string | null)[] = [];
   const states: State[] = [];
   const host: Host = {
-    walkToTile: (_id, done) => { setTimeout(() => done(true), opts.walkDelay ?? 100); },
     say: (t) => said.push(t),
     perch: vi.fn(),
     unperch: (d) => setTimeout(d, 220),
@@ -24,7 +23,7 @@ const ms = (n: number) => vi.advanceTimersByTime(n);
 /** hover a tile and let the whole notice -> walk -> talk sequence run */
 function explainByHover(m: Machine, id: string) {
   m.pointerTile(id);
-  ms(T.DWELL + T.NOTICE + 100);
+  ms(T.DWELL);
 }
 
 beforeEach(() => vi.useFakeTimers());
@@ -61,16 +60,14 @@ describe('lifecycle', () => {
 });
 
 describe('hover to talk', () => {
-  it('600 ms dwell, 300 ms notice, walk, then talk', () => {
+  it('~450 ms on a tile explains it, no click and no walk first', () => {
     const { m, said, states } = setup();
     m.enable(null); ms(T.ENTER);
     m.pointerTile('t1');
     ms(T.DWELL - 1); expect(m.state).toBe('idle');
-    ms(1); expect(m.state).toBe('noticing');
-    ms(T.NOTICE); expect(m.state).toBe('walking');
-    ms(100); expect(m.state).toBe('talking');
+    ms(1); expect(m.state).toBe('talking');
     expect(said.at(-1)).toBe('d1');
-    expect(states.slice(-3)).toEqual(['noticing', 'walking', 'talking']);
+    expect(states.slice(-1)).toEqual(['talking']);
   });
   it('leaving before the dwell cancels', () => {
     const { m } = setup();
@@ -78,7 +75,7 @@ describe('hover to talk', () => {
     m.pointerTile('t1'); ms(300); m.pointerTile(null); ms(2000);
     expect(m.state).toBe('idle');
   });
-  it('talks 5 s then cools down 8 s', () => {
+  it('talks 5 s then cools down 3 s', () => {
     const { m, said } = setup();
     m.enable(null); ms(T.ENTER);
     explainByHover(m, 't1');
@@ -93,54 +90,38 @@ describe('hover to talk', () => {
     m.pointerTile(null);
     expect(m.state).toBe('cooldown');
   });
-  it('no new dwell during the 8 s cooldown, but one starts when it ends if still hovering', () => {
+  it('no new bubble during the 3 s cooldown; one starts when it ends if still hovering a new tile', () => {
     const { m, said } = setup();
     m.enable(null); ms(T.ENTER); explainByHover(m, 't1');
     ms(T.TALK);
-    m.pointerTile('t2'); ms(5000);
+    m.pointerTile('t2'); ms(2000);
     expect(m.state).toBe('cooldown');
     expect(said).not.toContain('d2');
-    ms(T.COOLDOWN); // cooldown ends 8 s after the talk; dwell restarts
-    ms(T.DWELL + T.NOTICE + 100 + 5);
+    ms(T.COOLDOWN - 2000 + T.DWELL + 5);
     expect(said).toContain('d2');
   });
-  it('never repeats a tile in a session', () => {
+  it('a tile is not repeated within 60 s but may repeat after', () => {
     const { m, said } = setup();
     m.enable(null); ms(T.ENTER);
     explainByHover(m, 't1'); ms(T.TALK + T.COOLDOWN);
     m.pointerTile(null); m.pointerTile('t1'); ms(5000);
     expect(said.filter((s) => s === 'd1')).toHaveLength(1);
+    m.pointerTile(null); ms(REPEAT_MS);
+    m.input(Date.now());
+    m.pointerTile('t1'); ms(T.DWELL + 1);
+    expect(said.filter((s) => s === 'd1')).toHaveLength(2);
   });
-  it('stops after 6 auto bubbles; clicking Probe still works', () => {
-    const { m, said } = setup(10);
+  it('there is no per-visit cap: ten different tiles all get explained', () => {
+    const { m, said } = setup(12);
     m.enable(null); ms(T.ENTER);
-    for (let i = 0; i < 8; i++) {
-      m.pointerTile(null); explainByHover(m, `t${i}`); ms(T.TALK + T.COOLDOWN);
-    }
-    const auto = said.filter((s) => /^d\d$/.test(s ?? ''));
-    expect(auto).toHaveLength(MAX_AUTO);
-    m.input(Date.now()); // wake if dozing
-    m.clickProbe();
-    expect(said.at(-1)).toBe('hint');
-  });
-  it('retargets only after arrival, never mid-walk', () => {
-    const { m, said } = setup(10, { walkDelay: 1000 });
-    m.enable(null); ms(T.ENTER);
-    m.pointerTile('t1'); ms(T.DWELL + T.NOTICE + 10);
-    expect(m.state).toBe('walking');
-    m.pointerTile('t2');
-    expect(m.state).toBe('walking');
-    ms(1000);
-    expect(said).not.toContain('d1'); // pointer is no longer on t1
-    expect(m.state).toBe('idle');
-    ms(T.DWELL + T.NOTICE + 1000 + 10);
-    expect(said).toContain('d2');
+    for (let i = 0; i < 10; i++) { m.pointerTile(null); explainByHover(m, `t${i}`); ms(T.TALK + T.COOLDOWN); m.input(Date.now()); }
+    expect(said.filter((s) => /^d\d$/.test(s ?? ''))).toHaveLength(10);
   });
   it('waits while the user scrolls or selects text', () => {
     let ok = false;
     const { m, said } = setup(10, { canSpeak: () => ok });
     m.enable(null); ms(T.ENTER);
-    m.pointerTile('t1'); ms(T.DWELL + T.NOTICE + 100 + 400);
+    m.pointerTile('t1'); ms(T.DWELL + 400);
     expect(said).not.toContain('d1');
     ok = true; ms(T.SPEAK_RETRY + 1);
     expect(said).toContain('d1');

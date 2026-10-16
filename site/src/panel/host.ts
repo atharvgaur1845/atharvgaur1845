@@ -135,6 +135,7 @@ export class PanelHost {
 
   private animateIn(panel: HTMLElement, win: HTMLElement, from: DOMRect | null) {
     const bd = panel.querySelector<HTMLElement>('.p-backdrop')!;
+    panel.getAnimations({ subtree: true }).forEach((a) => a.cancel()); // never inherit a leftover fade from a previous close
     if (this.reduced()) {
       win.animate({ opacity: [0, 1] }, { duration: 150 });
       bd.animate({ opacity: [0, 1] }, { duration: 150 });
@@ -189,7 +190,9 @@ export class PanelHost {
     } else {
       anims = [win.animate({ opacity: [1, 0] }, { duration: 150, fill: 'forwards' })];
     }
-    Promise.all(anims.map((a) => a.finished)).then(() => { anims.forEach((a) => a.cancel()); done(); }, done);
+    // the content fade-out uses fill: forwards; cancel every animation in the panel or a reopen stays at opacity 0
+    const clear = () => { panel.getAnimations({ subtree: true }).forEach((a) => a.cancel()); };
+    Promise.all(anims.map((a) => a.finished)).then(() => { clear(); done(); }, () => { clear(); done(); });
   }
 
   // ---- behaviour inside the panel

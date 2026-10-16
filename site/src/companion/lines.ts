@@ -8,27 +8,23 @@ export interface Globals {
 export const KIND_COLOUR: Record<Kind, string> = {
   research: '#2F5BD8', achievement: '#C0266D', project: '#0E7A5C', oss: '#5B3FD0',
 };
-export const MAX_AUTO = 6;
+export const REPEAT_MS = 60000; // a tile may be explained again after this long
 
 export interface KV { getItem(k: string): string | null; setItem(k: string, v: string): void }
 
-/** Session memory for explained tiles and auto bubble count. Falls back to memory when storage throws. */
+/** Remembers when each tile was last explained (no cap; a tile may repeat after REPEAT_MS). Falls back to memory when storage throws. */
 export class Session {
-  private explained = new Set<string>();
-  private n = 0;
-  constructor(private kv?: KV, private key = 'probe-session') {
+  private seen = new Map<string, number>();
+  constructor(private kv?: KV, private key = 'probe-session-v2') {
     try {
       const raw = kv?.getItem(key);
-      if (raw) { const o = JSON.parse(raw); this.explained = new Set(o.e ?? []); this.n = Number(o.n) || 0; }
+      if (raw) for (const [k, v] of Object.entries(JSON.parse(raw) as Record<string, number>)) this.seen.set(k, v);
     } catch { /* memory only */ }
   }
-  has(id: string) { return this.explained.has(id); }
-  get count() { return this.n; }
-  get capped() { return this.n >= MAX_AUTO; }
-  /** Record one auto bubble about a tile. */
-  recordAuto(id: string) { this.explained.add(id); this.n += 1; this.save(); }
-  private save() {
-    try { this.kv?.setItem(this.key, JSON.stringify({ e: [...this.explained], n: this.n })); } catch { /* ignore */ }
+  has(id: string, now = Date.now()) { const t = this.seen.get(id); return t !== undefined && now - t < REPEAT_MS; }
+  recordAuto(id: string, now = Date.now()) {
+    this.seen.set(id, now);
+    try { this.kv?.setItem(this.key, JSON.stringify(Object.fromEntries(this.seen))); } catch { /* ignore */ }
   }
 }
 

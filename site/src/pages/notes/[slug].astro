@@ -13,7 +13,7 @@ export async function getStaticPaths() {
 const { note } = Astro.props;
 const entries = await getEntries();
 const entry = entries.find((e) => e.data.id === note.data.entry)!;
-const { Content, headings, remarkPluginFrontmatter } = await render(note);
+const { Content, headings } = await render(note);
 const toc = headings.filter((h) => h.depth === 2);
 const words = (note.body ?? '').replace(/\{\/\*[\s\S]*?\*\//g, '').split(/\s+/).filter(Boolean).length;
 const minutes = note.data.readingTime ?? Math.max(1, Math.round(words / 200));
@@ -26,8 +26,8 @@ const style = pal ? `--c-accent:${pal.accent};--c-tint:${pal.tint};--c-bg:${pal.
 <Base title={`${note.data.title} | Atharv Sharma`} description={note.data.subtitle} image={`/og/${entry.data.id}.png`} noindex={note.data.draft}>
   <Nav />
   <main id="main" class="wrap note-wrap" style={style}>
-    <p class="crumb"><a href={`/p/${entry.data.id}/`}>← back to {entry.data.title} on the {shelf} shelf</a></p>
-    <header class="note-head">
+    <p class="crumb" data-content><a href={`/p/${entry.data.id}/`}>← back to {entry.data.title} on the {shelf} shelf</a></p>
+    <header class="note-head" data-content>
       <h1>{note.data.title}</h1>
       {note.data.subtitle && <p class="sub">{note.data.subtitle}</p>}
       <p class="meta-row">
@@ -38,13 +38,13 @@ const style = pal ? `--c-accent:${pal.accent};--c-tint:${pal.tint};--c-bg:${pal.
       </p>
     </header>
     <div class="note-grid">
-      <nav class="toc" aria-label="Contents in this note">
+      <nav class="toc" data-content aria-label="Contents in this note">
         <details>
           <summary class="pixel">CONTENTS</summary>
           <ol>{toc.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
         </details>
       </nav>
-      <article class="note">
+      <article class="note" data-content>
         <Content components={{ table: NoteTable }} />
       </article>
     </div>
